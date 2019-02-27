@@ -75,7 +75,7 @@ run(main())  # "Hello, aiodine!"
 A consumer can also define any extra non-provider parameters. These **must** be declared **after** provider parameters in order for aiodine to correctly inject the provided values to the correct parameters. When calling the consumer, extra arguments can be passed as usual.
 
 ```python
-@aiodine.provider
+@aiodine.consumer
 async def show_friendly_message(hello, repeat=1):
     for _ in range(repeat):
         print(hello)
