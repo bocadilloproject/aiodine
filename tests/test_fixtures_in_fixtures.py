@@ -1,6 +1,6 @@
 import pytest
 
-from bocadillo.fixtures import Store, RecursiveFixtureError
+from aiodine import Store, RecursiveFixtureError
 
 
 pytestmark = pytest.mark.asyncio

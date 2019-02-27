@@ -1,7 +1,7 @@
 import pytest
 from inspect import iscoroutine
 
-from bocadillo.fixtures import Store, FixtureDeclarationError
+from aiodine import Store, FixtureDeclarationError
 
 pytestmark = pytest.mark.asyncio
 

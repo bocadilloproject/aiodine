@@ -1,8 +1,8 @@
 import pytest
 
-from bocadillo.fixtures import Store
+from aiodine import Store
 
 
-@pytest.fixture(name="store")
-def fixture_store() -> Store:
+@pytest.fixture
+def store() -> Store:
     return Store()

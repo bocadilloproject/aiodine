@@ -1,7 +1,7 @@
 import sys
 
 import pytest
-from bocadillo.fixtures import Store
+from aiodine import Store
 
 
 @pytest.fixture

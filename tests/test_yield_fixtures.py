@@ -1,6 +1,6 @@
 import pytest
 
-from bocadillo.fixtures import Store
+from aiodine import Store
 
 pytestmark = pytest.mark.asyncio
 

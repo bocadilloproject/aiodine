@@ -1,6 +1,6 @@
 import pytest
 
-from bocadillo.fixtures import Store
+from aiodine import Store
 
 
 def test_fixtures_are_session_scoped_by_default(store: Store):

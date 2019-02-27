@@ -1,4 +1,4 @@
-from bocadillo.fixtures import Store
+from aiodine import Store
 
 
 def test_name_is_function_name_by_default(store: Store):
