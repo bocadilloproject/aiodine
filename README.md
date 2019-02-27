@@ -1,5 +1,14 @@
 # aiodine
 
+[![python](https://img.shields.io/pypi/pyversions/aiodine.svg?logo=python&logoColor=fed749&colorB=3770a0&label=)](https://www.python.org)
+[![pypi](https://img.shields.io/pypi/v/aiodine.svg)][pypi-url]
+[![travis](https://img.shields.io/travis/bocadilloproject/aiodine.svg)](https://travis-ci.org/bocadilloproject/aiodine)
+[![black](https://img.shields.io/badge/code_style-black-000000.svg)](https://github.com/ambv/black)
+[![codecov](https://codecov.io/gh/bocadilloproject/aiodine/branch/master/graph/badge.svg)](https://codecov.io/gh/bocadilloproject/aiodine)
+[![license](https://img.shields.io/pypi/l/aiodine.svg)][pypi-url]
+
+[pypi-url]: https://pypi.org/project/aiodine/
+
 aiodine provides async-first [dependency injection][di] in the style of [Pytest fixtures](https://docs.pytest.org/en/latest/fixture.html) for Python 3.6+.
 
 ## Installation
