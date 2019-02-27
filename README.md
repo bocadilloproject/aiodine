@@ -19,9 +19,13 @@ pip install aiodine
 
 ## Usage
 
+> Note: this section is under construction.
+
 aiodine revolves around two concepts: **providers** and **consumers**.
 
-**Providers** make a _resource_ available to consumers within a certain _scope_.
+### Providers
+
+**Providers** make a _resource_ available to consumers within a certain _scope_. They are created by decorating a **provider function** with `@aiodine.provider`.
 
 Here's a "hello world" provider:
 
@@ -33,7 +37,11 @@ async def hello():
     return "Hello, aiodine!"
 ```
 
-Once a provider has been declared, it can be used by **consumers**. All a consumer has to do is declare the provider as one of its parameters, and aiodine will inject it at runtime.
+> **Tip**: synchronous provider functions are also supported!
+
+### Consumers
+
+Once a provider has been declared, it can be used by **consumers**. A consumer is built by decoratinga **consumer function** with `@aiodine.consumer`. A consumer can declare a provider as one of its parameters and aiodine will inject it at runtime.
 
 Here's an example consumer:
 
@@ -42,10 +50,55 @@ Here's an example consumer:
 async def show_friendly_message(hello):
     print(hello)
 
-show_friendly_message()  # "Hello, aiodine!"
 ```
 
-More usage tips to come!
+> **Tip**: synchronous consumer functions are also supported!
+
+All aiodine consumers are asynchronous, so you'll need to run them in an asynchronous context:
+
+```python
+from asyncio import run
+
+async def main():
+    await show_friendly_message()
+
+run(main())  # "Hello, aiodine!"
+```
+
+### Providers consuming other providers
+
+Providers can also consume other providers. To do so, providers need to be _frozen_ so that the dependency graph can be correctly resolved:
+
+```python
+import aiodine
+
+@aiodine.provider
+async def email():
+    return "user@example.net"
+
+@aiodine.provider
+async def send_email(email):
+    print(f"Sending email to {email}…")
+
+aiodine.freeze()  # <- Ensures that `send_email` has resolved `email`.
+```
+
+A context manager is also available:
+
+```python
+import aiodine
+
+with aiodine.exit_freeze():
+    @aiodine.provider
+    async def email():
+        return "user@example.net"
+
+    @aiodine.provider
+    async def send_email(email):
+        print(f"Sending email to {email}…")
+```
+
+Note: thanks to this, providers can be declared in any order.
 
 ## FAQ
 
@@ -62,3 +115,7 @@ See [CHANGELOG.md](https://github.com/bocadilloproject/aiodine/blob/master/CHANG
 ## License
 
 MIT
+
+```
+
+```
