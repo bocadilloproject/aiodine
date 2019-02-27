@@ -129,6 +129,28 @@ async def testing():
 
 > **Tip**: synchronous generator providers are also supported!
 
+### Lazy async providers
+
+When the provider function is asynchronous, its return value is awaited _before_ being injected into the consumer. In other words, providers are **eager** by default.
+
+You can mark a provider as **lazy** in order to defer awaiting the provided value to the consumer. This is useful when the provider needs to be conditionally evaluated.
+
+```python
+from asyncio import sleep
+import aiodine
+
+@aiodine.provider(lazy=True)
+async def expensive_computation():
+    await sleep(10)
+    return 42
+
+@aiodine.consumer
+async def compute(expensive_computation, cache=None):
+    if cache:
+        return cache
+    return await expensive_computation
+```
+
 ## FAQ
 
 ### Why "aiodine"?
