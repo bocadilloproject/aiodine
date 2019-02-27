@@ -9,6 +9,7 @@ pylint = "*"
 rope = "*"
 pytest = "*"
 pytest-asyncio = "*"
+bumpversion = "*"
 
 [packages]
 aiodine = {path = "."}
