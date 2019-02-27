@@ -73,7 +73,7 @@ class Store:
         }
         return dict(filter(lambda item: item[1] is not None, providers.items()))
 
-    def _resolve_providers(self, func: Callable) -> Tuple[list, dict]:
+    def _resolve_parameters(self, consumer: Callable) -> Tuple[list, dict]:
         args_providers: List[Tuple[str, Provider]] = []
         kwargs_providers: Dict[str, Provider] = {}
 
@@ -82,7 +82,7 @@ class Store:
         # non-provider parameters.
         processing_providers = True
 
-        for name, parameter in inspect.signature(func).parameters.items():
+        for name, parameter in inspect.signature(consumer).parameters.items():
             fixt: Optional[Provider] = self.providers.get(name)
 
             if fixt is None:
@@ -93,7 +93,7 @@ class Store:
                 raise ProviderDeclarationError(
                     "Provider parameters must be declared *before* other "
                     "parameters, so that they can be deterministically passed "
-                    "to the consuming function."
+                    "to the consumer."
                 )
 
             if parameter.kind == inspect.Parameter.KEYWORD_ONLY:
@@ -104,19 +104,19 @@ class Store:
         return args_providers, kwargs_providers
 
     def resolve(
-        self, func: Union[Callable, CoroutineFunction]
+        self, consumer: Union[Callable, CoroutineFunction]
     ) -> CoroutineFunction:
-        if not inspect.iscoroutinefunction(func):
-            func = wrap_async(func)
+        if not inspect.iscoroutinefunction(consumer):
+            consumer = wrap_async(consumer)
 
-        assert inspect.iscoroutinefunction(func)
+        assert inspect.iscoroutinefunction(consumer)
 
-        args_providers, kwargs_providers = self._resolve_providers(func)
+        args_providers, kwargs_providers = self._resolve_parameters(consumer)
 
         if not args_providers and not kwargs_providers:
-            return func
+            return consumer
 
-        @wraps(func)
+        @wraps(consumer)
         async def with_providers(*args, **kwargs):
             # Evaluate the providers when the function is actually called.
             async with AsyncExitStack() as stack:
@@ -134,7 +134,7 @@ class Store:
 
                 # NOTE: injected args must be given first by convention.
                 # The order for kwargs should not matter.
-                return await func(
+                return await consumer(
                     *injected_args, *args, **injected_kwargs, **kwargs
                 )
 
