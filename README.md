@@ -1,6 +1,6 @@
 # aiodine
 
-aiodine provides async-capable [dependency injection][di] in the style of [Pytest fixtures](https://docs.pytest.org/en/latest/fixture.html) for Python 3.6+.
+aiodine provides async-first [dependency injection][di] in the style of [Pytest fixtures](https://docs.pytest.org/en/latest/fixture.html) for Python 3.6+.
 
 ## Installation
 
@@ -20,7 +20,7 @@ Here's a "hello world" provider:
 import aiodine
 
 @aiodine.provider
-def hello():
+async def hello():
     return "Hello, aiodine!"
 ```
 
@@ -30,13 +30,13 @@ Here's an example consumer:
 
 ```python
 @aiodine.consumer
-def show_friendly_message(hello):
+async def show_friendly_message(hello):
     print(hello)
 
 show_friendly_message()  # "Hello, aiodine!"
 ```
 
-More usage tips to come.
+More usage tips to come!
 
 ## FAQ
 
