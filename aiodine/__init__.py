@@ -11,6 +11,6 @@ empty = _STORE.empty
 discover = _STORE.discover
 discover_default = _STORE.discover_default
 freeze = _STORE.freeze
-will_freeze = _STORE.will_freeze
+exit_freeze = _STORE.exit_freeze
 
 __version__ = "0.0.0"

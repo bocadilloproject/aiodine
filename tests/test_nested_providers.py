@@ -8,7 +8,7 @@ pytestmark = pytest.mark.asyncio
 
 
 async def test_provider_uses_provider(store: Store):
-    with store.will_freeze():
+    with store.exit_freeze():
 
         @store.provider
         def a():
@@ -23,7 +23,7 @@ async def test_provider_uses_provider(store: Store):
 
 
 async def test_provider_uses_provider_declared_later(store: Store):
-    with store.will_freeze():
+    with store.exit_freeze():
 
         @store.provider
         def b(a):

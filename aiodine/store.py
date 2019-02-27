@@ -161,6 +161,6 @@ class Store:
             prov.func = self.consumer(prov.func)
 
     @contextmanager
-    def will_freeze(self):
+    def exit_freeze(self):
         yield
         self.freeze()
