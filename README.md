@@ -54,3 +54,11 @@ More usage tips to come!
 aiodine contains _aio_ as in _asyncio_, and _di_ as in [Dependency Injection][di] The last two letters are only there to make this library's name pronounce like _iodine_, the chemical element.
 
 [di]: https://en.wikipedia.org/wiki/Dependency_injection
+
+## Changelog
+
+See [CHANGELOG.md](https://github.com/bocadilloproject/aiodine/blob/master/CHANGELOG.md).
+
+## License
+
+MIT
