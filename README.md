@@ -72,6 +72,18 @@ async def main():
 run(main())  # "Hello, aiodine!"
 ```
 
+A consumer can also define any extra non-provider parameters. These **must** be declared **after** provider parameters in order for aiodine to correctly inject the provided values to the correct parameters. When calling the consumer, extra arguments can be passed as usual.
+
+```python
+@aiodine.provider
+async def show_friendly_message(hello, repeat=1):
+    for _ in range(repeat):
+        print(hello)
+
+async def main():
+    await show_friendly_message(repeat=10)
+```
+
 ### Providers consuming other providers
 
 Providers can also consume other providers. To do so, providers need to be _frozen_ so that the dependency graph can be correctly resolved:
