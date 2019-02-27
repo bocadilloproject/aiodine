@@ -1,7 +1,8 @@
 import pytest
 from inspect import iscoroutine
 
-from aiodine import Store, ProviderDeclarationError
+from aiodine import Store, scopes
+from aiodine.exceptions import ProviderDeclarationError
 
 pytestmark = pytest.mark.asyncio
 
@@ -36,9 +37,10 @@ async def test_lazy_async_provider(store: Store):
     assert await play() == "C#C#"
 
 
-async def test_lazy_provider_must_be_session_scoped(store: Store):
+@pytest.mark.parametrize("scope", (scopes.SESSION, "other"))
+async def test_lazy_provider_must_be_function_scoped(store: Store, scope):
     with pytest.raises(ProviderDeclarationError):
 
-        @store.provider(lazy=True, scope="other")
+        @store.provider(lazy=True, scope=scope)
         async def pitch():
             pass

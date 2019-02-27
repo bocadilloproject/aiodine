@@ -1,2 +1,2 @@
+FUNCTION = "function"
 SESSION = "session"
-APP = "app"

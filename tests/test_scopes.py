@@ -1,19 +1,19 @@
 import pytest
 
-from aiodine import Store
+from aiodine import Store, scopes
 
 
-def test_providers_are_session_scoped_by_default(store: Store):
+def test_providers_are_function_scoped_by_default(store: Store):
     @store.provider
     def items():
         pass
 
-    assert items.scope == "session"
+    assert items.scope == scopes.FUNCTION
 
 
 @pytest.mark.asyncio
-async def test_session_provider_is_recomputed_every_time(store: Store):
-    @store.provider(scope="session")
+async def test_function_provider_is_recomputed_every_time(store: Store):
+    @store.provider(scope=scopes.FUNCTION)
     def items():
         return []
 
@@ -27,8 +27,8 @@ async def test_session_provider_is_recomputed_every_time(store: Store):
 
 
 @pytest.mark.asyncio
-async def test_scope_provider_is_computed_once_and_reused(store: Store):
-    @store.provider(scope="app")
+async def test_session_provider_is_computed_once_and_reused(store: Store):
+    @store.provider(scope=scopes.SESSION)
     def items():
         return []
 

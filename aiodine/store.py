@@ -54,7 +54,7 @@ class Store:
     def provider(
         self,
         func: Callable = None,
-        scope: str = scopes.SESSION,
+        scope: str = scopes.FUNCTION,
         name: str = None,
         lazy: bool = False,
     ) -> Provider:

@@ -6,9 +6,7 @@ import inspect
 from .datatypes import CoroutineFunction
 from .compat import wrap_async, wrap_generator_async, AsyncExitStack
 from .exceptions import ProviderDeclarationError
-
-SCOPE_SESSION = "session"
-SCOPE_APP = "app"
+from . import scopes
 
 
 async def _terminate_agen(async_gen: AsyncGenerator):
@@ -26,9 +24,9 @@ class Provider:
     __slots__ = ("func", "name", "scope", "lazy")
 
     def __init__(self, func: Callable, name: str, scope: str, lazy: bool):
-        if lazy and scope != SCOPE_SESSION:
+        if lazy and scope != scopes.FUNCTION:
             raise ProviderDeclarationError(
-                "Lazy providers must be session-scoped"
+                "Lazy providers must be function-scoped"
             )
 
         if inspect.isgeneratorfunction(func):
@@ -51,9 +49,9 @@ class Provider:
     def create(cls, func, **kwargs) -> "Provider":
         """Factory method to build a provider of the appropriate scope."""
         scope: Optional[str] = kwargs.get("scope")
-        if scope == SCOPE_APP:
-            return AppProvider(func, **kwargs)
-        return Provider(func, **kwargs)
+        if scope == scopes.SESSION:
+            return SessionProvider(func, **kwargs)
+        return FunctionProvider(func, **kwargs)
 
     def __repr__(self) -> str:
         return (
@@ -62,6 +60,16 @@ class Provider:
 
     # NOTE: the returned value is an awaitable, so we *must not*
     # declare this function as `async` — its return value already is.
+    def __call__(self, stack: AsyncExitStack) -> Awaitable:
+        raise NotImplementedError
+
+
+class FunctionProvider(Provider):
+    """Represents a function-scoped provider.
+
+    Its value is recomputed every time the provider is called.
+    """
+
     def __call__(self, stack: AsyncExitStack) -> Awaitable:
         value: Union[Awaitable, AsyncGenerator] = self.func()
 
@@ -82,12 +90,12 @@ class Provider:
         return value
 
 
-class AppProvider(Provider):
-    """Represents an app-scoped provider.
+class SessionProvider(Provider):
+    """Represents a session-scoped provider.
 
     When called, it builds its instance if necessary and returns it. This
     means that the underlying provider is only built once and is reused
-    across sessions.
+    across function calls.
     """
 
     __slots__ = Provider.__slots__ + ("_instance",)

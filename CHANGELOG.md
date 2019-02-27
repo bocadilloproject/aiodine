@@ -14,9 +14,9 @@ Initial release.
 - Sync/async providers.
   - Providers are named after their function, unless `name` is given.
 - Sync/async consumers.
-- `session` and `app` scopes.
+- `function` and `session` scopes.
 - Session-scoped generator providers.
-- Lazy async providers (session-scoped only).
+- Lazy async providers (function-scoped only).
 - Provider discovery: `@aiodine.provider`, `providerconf.py`, `discover_providers()`.
 - Nested providers: providers can consume other providers.
 - Use the `aiodine` module directly or create a separate `Store`.

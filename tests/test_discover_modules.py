@@ -17,7 +17,7 @@ def notes_module(store: Store):
 @pytest.mark.asyncio
 @pytest.mark.usefixtures("notes_module")
 async def test_discover_providers(store: Store):
-    store.discover_providers("notes")
+    store.discover("notes")
     assert store
     assert store.has_provider("pitch")
     assert await store.consumer(lambda pitch: 2 * pitch)() == "C#C#"
@@ -25,4 +25,4 @@ async def test_discover_providers(store: Store):
 
 def test_if_module_does_not_exist_then_error(store: Store):
     with pytest.raises(ImportError):
-        store.discover_providers("doesnotexist")
+        store.discover("doesnotexist")

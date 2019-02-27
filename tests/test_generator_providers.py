@@ -5,7 +5,7 @@ from aiodine import Store
 pytestmark = pytest.mark.asyncio
 
 
-async def test_sync_session_yield_provider(store: Store):
+async def test_sync_function_yield_provider(store: Store):
     setup = False
     teardown = False
 
@@ -25,7 +25,7 @@ async def test_sync_session_yield_provider(store: Store):
     assert teardown
 
 
-async def test_async_session_yield_provider(store: Store):
+async def test_async_function_yield_provider(store: Store):
     setup = False
     teardown = False
 
