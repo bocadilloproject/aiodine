@@ -2,7 +2,7 @@ import inspect
 from contextlib import contextmanager, suppress
 from functools import partial, wraps
 from importlib import import_module
-from typing import Any, Callable, Dict, List, Optional, Tuple, Union, NamedTuple
+from typing import Any, Callable, Dict, List, Optional, Union, NamedTuple
 
 from . import scopes
 from .compat import AsyncExitStack, wrap_async
@@ -25,6 +25,8 @@ class ResolvedProviders(NamedTuple):
 
 
 class Store:
+
+    __slots__ = ("providers",)
 
     DEFAULT_PROVIDERS_MODULE = "providerconf"
 

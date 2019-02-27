@@ -1,4 +1,4 @@
-from functools import update_wrapper, partial
+from functools import partial
 from contextlib import suppress
 from typing import Any, Awaitable, Callable, Optional, Union, AsyncGenerator
 import inspect
@@ -23,6 +23,8 @@ class Provider:
     some metadata.
     """
 
+    __slots__ = ("func", "name", "scope", "lazy")
+
     def __init__(self, func: Callable, name: str, scope: str, lazy: bool):
         if lazy and scope != SCOPE_SESSION:
             raise ProviderDeclarationError(
@@ -44,8 +46,6 @@ class Provider:
         self.name = name
         self.scope = scope
         self.lazy = lazy
-
-        update_wrapper(self, self.func)
 
     @classmethod
     def create(cls, func, **kwargs) -> "Provider":
@@ -89,6 +89,8 @@ class AppProvider(Provider):
     means that the underlying provider is only built once and is reused
     across sessions.
     """
+
+    __slots__ = Provider.__slots__ + ("_instance",)
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
