@@ -1,0 +1,52 @@
+language: python
+
+python: "3.6"
+
+cache: pip
+
+jobs:
+  include:
+    - stage: test
+      language: python
+      cache: pip
+      python: "3.6"
+      install:
+        - pip install .
+        - pip install -U pytest pytest-asyncio
+      script: pytest
+
+    - stage: test
+      if: branch != release/docs
+      language: python
+      # Python 3.7 still not available in usual distro
+      sudo: required
+      dist: xenial
+      python: "3.7"
+      install:
+        - pip install .
+        - pip install -U pytest pytest-asyncio codecov pytest-cov
+      script: pytest --cov=./
+      after_success: codecov
+
+    - stage: deploy to test pypi
+      if: branch = release/test
+      script: skip
+      deploy:
+        - provider: pypi
+          distributions: "sdist bdist_wheel"
+          username: $TEST_PYPI_USERNAME
+          password: $TEST_PYPI_PASSWORD
+          server: https://test.pypi.org/legacy/
+          on:
+            branch: release/test
+
+    - stage: deploy to pypi
+      if: tag IS present
+      script: skip
+      deploy:
+        - provider: pypi
+          distributions: "sdist bdist_wheel"
+          username: $PYPI_USERNAME
+          password: $PYPI_PASSWORD
+          on:
+            tags: true
