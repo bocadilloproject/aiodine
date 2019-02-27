@@ -7,6 +7,8 @@ verify_ssl = true
 mypy = "*"
 pylint = "*"
 rope = "*"
+pytest = "*"
+pytest-asyncio = "*"
 
 [packages]
 aiodine = {path = "."}
