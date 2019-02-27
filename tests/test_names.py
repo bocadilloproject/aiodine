@@ -2,7 +2,7 @@ from aiodine import Store
 
 
 def test_name_is_function_name_by_default(store: Store):
-    @store.fixture
+    @store.provider
     def example():
         pass
 
@@ -10,7 +10,7 @@ def test_name_is_function_name_by_default(store: Store):
 
 
 def test_if_name_given_then_used(store: Store):
-    @store.fixture(name="an_example")
+    @store.provider(name="an_example")
     def example():
         pass
 

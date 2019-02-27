@@ -1,13 +1,13 @@
 import pytest
 from inspect import iscoroutine
 
-from aiodine import Store, FixtureDeclarationError
+from aiodine import Store, ProviderDeclarationError
 
 pytestmark = pytest.mark.asyncio
 
 
-async def test_use_async_fixture(store: Store):
-    @store.fixture
+async def test_use_async_provider(store: Store):
+    @store.provider
     async def pitch():
         return "C#"
 
@@ -23,8 +23,8 @@ async def test_use_async_fixture(store: Store):
     assert await play_async() == "C#C#"
 
 
-async def test_lazy_async_fixture(store: Store):
-    @store.fixture(lazy=True)
+async def test_lazy_async_provider(store: Store):
+    @store.provider(lazy=True)
     async def pitch():
         return "C#"
 
@@ -36,9 +36,9 @@ async def test_lazy_async_fixture(store: Store):
     assert await play() == "C#C#"
 
 
-async def test_lazy_fixture_must_be_session_scoped(store: Store):
-    with pytest.raises(FixtureDeclarationError):
+async def test_lazy_provider_must_be_session_scoped(store: Store):
+    with pytest.raises(ProviderDeclarationError):
 
-        @store.fixture(lazy=True, scope="other")
+        @store.provider(lazy=True, scope="other")
         async def pitch():
             pass

@@ -2,7 +2,8 @@ import inspect
 
 import pytest
 
-from aiodine import Store, FixtureDeclarationError
+from aiodine import Store
+from aiodine.exceptions import ProviderDeclarationError
 
 pytestmark = pytest.mark.asyncio
 
@@ -12,13 +13,13 @@ async def test_resolve_for_func_returns_coroutine_function(store: Store):
     assert inspect.iscoroutinefunction(func)
 
 
-async def test_if_no_fixture_declared_then_behaves_like_func(store: Store):
+async def test_if_no_provider_decalred_then_behaves_like_func(store: Store):
     func = store.resolve(lambda: "test")
     assert await func() == "test"
 
 
-async def test_if_fixture_does_not_exist_then_missing_argument(store: Store):
-    @store.fixture
+async def test_if_provider_does_not_exist_then_missing_argument(store: Store):
+    @store.provider
     def gra():
         return "gra"
 
@@ -31,8 +32,8 @@ async def test_if_fixture_does_not_exist_then_missing_argument(store: Store):
     assert await func(10) == 20
 
 
-async def test_if_fixture_exists_then_injected(store: Store):
-    @store.fixture
+async def test_if_provider_exists_then_injected(store: Store):
+    @store.provider
     def arg():
         return "foo"
 
@@ -43,8 +44,10 @@ async def test_if_fixture_exists_then_injected(store: Store):
     assert await func() == "foofoo"
 
 
-async def test_non_fixture_parameters_after_fixture_parameters_ok(store: Store):
-    @store.fixture
+async def test_non_provider_parameters_after_provider_parameters_ok(
+    store: Store
+):
+    @store.provider
     def pitch():
         return "C#"
 
@@ -57,20 +60,22 @@ async def test_non_fixture_parameters_after_fixture_parameters_ok(store: Store):
     assert await play(duration=1) == ("C#", 1)
 
 
-async def test_fixture_parameters_before_fixture_parameters_fails(store: Store):
-    @store.fixture
+async def test_provider_parameters_before_provider_parameters_fails(
+    store: Store
+):
+    @store.provider
     def pitch():
         return "C#"
 
-    with pytest.raises(FixtureDeclarationError):
+    with pytest.raises(ProviderDeclarationError):
 
         @store.resolve
-        def play(duration, pitch):  # duration is before a fixture param
+        def play(duration, pitch):
             pass
 
 
 async def test_resolve_async_function(store: Store):
-    @store.fixture
+    @store.provider
     def pitch():
         return "C#"
 

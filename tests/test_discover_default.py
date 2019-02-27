@@ -6,24 +6,23 @@ from aiodine import Store
 
 
 @pytest.fixture
-def fixtureconf(store: Store):
+def default_module(store: Store):
     class FixtureConf:
-        # Simulates a `fixtureconf` module.
-        @store.fixture
+        @store.provider
         def example():  # pylint: disable=no-method-argument
             return "foo"
 
-    sys.modules["fixtureconf"] = FixtureConf
+    sys.modules["providerconf"] = FixtureConf
 
 
-def test_if_no_fixture_conf_then_ok(store: Store):
+def test_if_no_provider_conf_then_ok(store: Store):
     store.discover_default()
     assert not store
 
 
 @pytest.mark.asyncio
-@pytest.mark.usefixtures("fixtureconf")
-async def test_if_fixtureconf_then_fixtures_are_loaded(store: Store):
+@pytest.mark.usefixtures("default_module")
+async def test_if_providerconf_then_providers_are_loaded(store: Store):
     store.discover_default()
     assert store
     assert "example" in store

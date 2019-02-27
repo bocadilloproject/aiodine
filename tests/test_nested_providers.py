@@ -1,19 +1,20 @@
 import pytest
 
-from aiodine import Store, RecursiveFixtureError
+from aiodine import Store
+from aiodine.exceptions import RecursiveProviderError
 
 
 pytestmark = pytest.mark.asyncio
 
 
-async def test_fixture_uses_fixture(store: Store):
+async def test_provider_uses_provider(store: Store):
     with store.will_freeze():
 
-        @store.fixture
+        @store.provider
         def a():
             return "a"
 
-        @store.fixture
+        @store.provider
         def b(a):
             return a * 2
 
@@ -21,14 +22,14 @@ async def test_fixture_uses_fixture(store: Store):
     assert await func() == "aaaa"
 
 
-async def test_fixture_uses_fixture_declared_later(store: Store):
+async def test_provider_uses_provider_declared_later(store: Store):
     with store.will_freeze():
 
-        @store.fixture
+        @store.provider
         def b(a):
             return a * 2
 
-        @store.fixture
+        @store.provider
         def a():
             return "a"
 
@@ -36,13 +37,13 @@ async def test_fixture_uses_fixture_declared_later(store: Store):
     assert await func() == "aaaa"
 
 
-async def test_detect_recursive_fixture(store: Store):
-    @store.fixture
+async def test_detect_recursive_provider(store: Store):
+    @store.provider
     def b(a):
         return a * 2
 
-    with pytest.raises(RecursiveFixtureError) as ctx:
+    with pytest.raises(RecursiveProviderError) as ctx:
 
-        @store.fixture
+        @store.provider
         def a(b):
             return a * 2

@@ -3,8 +3,8 @@ import pytest
 from aiodine import Store
 
 
-def test_fixtures_are_session_scoped_by_default(store: Store):
-    @store.fixture
+def test_providers_are_session_scoped_by_default(store: Store):
+    @store.provider
     def items():
         pass
 
@@ -12,8 +12,8 @@ def test_fixtures_are_session_scoped_by_default(store: Store):
 
 
 @pytest.mark.asyncio
-async def test_session_fixture_is_recomputed_every_time(store: Store):
-    @store.fixture(scope="session")
+async def test_session_provider_is_recomputed_every_time(store: Store):
+    @store.provider(scope="session")
     def items():
         return []
 
@@ -27,8 +27,8 @@ async def test_session_fixture_is_recomputed_every_time(store: Store):
 
 
 @pytest.mark.asyncio
-async def test_scope_fixture_is_computed_once_and_reused(store: Store):
-    @store.fixture(scope="app")
+async def test_scope_provider_is_computed_once_and_reused(store: Store):
+    @store.provider(scope="app")
     def items():
         return []
 
