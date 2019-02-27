@@ -18,4 +18,5 @@ Initial release.
 - Session-scoped generator providers.
 - Lazy async providers (session-scoped only).
 - Provider discovery: `@aiodine.provider`, `providerconf.py`, `discover_providers()`.
-- Nested providers: providers that consume other providers.
+- Nested providers: providers can consume other providers.
+- Use the `aiodine` module directly or create a separate `Store`.

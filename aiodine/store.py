@@ -45,9 +45,9 @@ class Store:
 
     def discover_default(self):
         with suppress(ImportError):
-            self.discover_providers(self.DEFAULT_PROVIDERS_MODULE)
+            self.discover(self.DEFAULT_PROVIDERS_MODULE)
 
-    def discover_providers(self, *module_paths: str):
+    def discover(self, *module_paths: str):
         for module_path in module_paths:
             import_module(module_path)
 
