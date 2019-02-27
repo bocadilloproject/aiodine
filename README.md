@@ -39,6 +39,13 @@ async def hello():
 
 > **Tip**: synchronous provider functions are also supported!
 
+Providers are available in two **scopes**:
+
+- `function`: the provider's value is re-computed everytime it is consumed.
+- `session`: the provider's value is computed only once (the first time it is consumed) and is reused in subsequent calls.
+
+By default, providers are function-scoped.
+
 ### Consumers
 
 Once a provider has been declared, it can be used by **consumers**. A consumer is built by decoratinga **consumer function** with `@aiodine.consumer`. A consumer can declare a provider as one of its parameters and aiodine will inject it at runtime.
@@ -99,6 +106,28 @@ with aiodine.exit_freeze():
 ```
 
 Note: thanks to this, providers can be declared in any order.
+
+### Generator providers
+
+Generator providers can be used to perform cleanup operations after a provider has gone out of scope.
+
+```python
+import os
+import aiodine
+
+@aiodine.provider(scope="session")
+async def testing():
+    initial = os.getenv("APP_ENV")
+    os.environ["APP_ENV"] = "TESTING"
+    try:
+        yield
+    finally:
+        os.environ.pop("APP_ENV")
+        if initial is not None:
+            os.environ["APP_ENV"] = initial
+```
+
+> **Tip**: synchronous generator providers are also supported!
 
 ## FAQ
 
