@@ -2,13 +2,26 @@ import inspect
 from contextlib import contextmanager, suppress
 from functools import partial, wraps
 from importlib import import_module
-from typing import Any, Callable, Dict, List, Optional, Tuple, Union
+from typing import Any, Callable, Dict, List, Optional, Tuple, Union, NamedTuple
 
 from . import scopes
 from .compat import AsyncExitStack, wrap_async
 from .datatypes import CoroutineFunction
 from .exceptions import ProviderDeclarationError, RecursiveProviderError
 from .providers import Provider
+
+
+PositionalProviders = List[Provider]
+KeywordProviders = Dict[str, Provider]
+
+
+class ResolvedProviders(NamedTuple):
+
+    positional: PositionalProviders
+    keyword: KeywordProviders
+
+    def __bool__(self):
+        return bool(self.positional) or bool(self.keyword)
 
 
 class Store:
@@ -51,15 +64,15 @@ class Store:
 
         # NOTE: save the new provider before checking for recursion,
         # so that its dependants can detect it as a dependency.
-        fixt = Provider.create(func, name=name, scope=scope, lazy=lazy)
-        self._add(fixt)
+        prov = Provider.create(func, name=name, scope=scope, lazy=lazy)
+        self._add(prov)
 
         self._check_for_recursive_providers(name, func)
 
-        return fixt
+        return prov
 
-    def _add(self, fixt: Provider):
-        self.providers[fixt.name] = fixt
+    def _add(self, prov: Provider):
+        self.providers[prov.name] = prov
 
     def _check_for_recursive_providers(self, name: str, func: Callable):
         for other_name, other in self._get_providers(func).items():
@@ -73,9 +86,9 @@ class Store:
         }
         return dict(filter(lambda item: item[1] is not None, providers.items()))
 
-    def _resolve_parameters(self, consumer: Callable) -> Tuple[list, dict]:
-        args_providers: List[Tuple[str, Provider]] = []
-        kwargs_providers: Dict[str, Provider] = {}
+    def _resolve_providers(self, consumer: Callable) -> ResolvedProviders:
+        positional: PositionalProviders = []
+        keyword: KeywordProviders = {}
 
         # NOTE: This flag goes down when we process a non-provider parameter.
         # It allows to detect provider parameters declared *after*
@@ -83,9 +96,9 @@ class Store:
         processing_providers = True
 
         for name, parameter in inspect.signature(consumer).parameters.items():
-            fixt: Optional[Provider] = self.providers.get(name)
+            prov: Optional[Provider] = self.providers.get(name)
 
-            if fixt is None:
+            if prov is None:
                 processing_providers = False
                 continue
 
@@ -97,11 +110,11 @@ class Store:
                 )
 
             if parameter.kind == inspect.Parameter.KEYWORD_ONLY:
-                kwargs_providers[name] = fixt
+                keyword[name] = prov
             else:
-                args_providers.append((name, fixt))
+                positional.append(prov)
 
-        return args_providers, kwargs_providers
+        return ResolvedProviders(positional=positional, keyword=keyword)
 
     def resolve(
         self, consumer: Union[Callable, CoroutineFunction]
@@ -111,9 +124,9 @@ class Store:
 
         assert inspect.iscoroutinefunction(consumer)
 
-        args_providers, kwargs_providers = self._resolve_parameters(consumer)
+        providers = self._resolve_providers(consumer)
 
-        if not args_providers and not kwargs_providers:
+        if not providers:
             return consumer
 
         @wraps(consumer)
@@ -121,15 +134,15 @@ class Store:
             # Evaluate the providers when the function is actually called.
             async with AsyncExitStack() as stack:
 
-                async def _instanciate(fixt):
-                    return fixt(stack) if fixt.lazy else await fixt(stack)
+                async def _get_value(prov):
+                    return prov(stack) if prov.lazy else await prov(stack)
 
                 injected_args = [
-                    await _instanciate(fixt) for _, fixt in args_providers
+                    await _get_value(prov) for prov in providers.positional
                 ]
                 injected_kwargs = {
-                    name: await _instanciate(fixt)
-                    for name, fixt in kwargs_providers.items()
+                    name: await _get_value(prov)
+                    for name, prov in providers.keyword.items()
                 }
 
                 # NOTE: injected args must be given first by convention.
@@ -142,8 +155,8 @@ class Store:
 
     def freeze(self):
         """Resolve providers used by each provider."""
-        for fixt in self.providers.values():
-            fixt.func = self.resolve(fixt.func)
+        for prov in self.providers.values():
+            prov.func = self.resolve(prov.func)
 
     @contextmanager
     def will_freeze(self):
