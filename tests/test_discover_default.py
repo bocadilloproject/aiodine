@@ -26,4 +26,4 @@ async def test_if_providerconf_then_providers_are_loaded(store: Store):
     store.discover_default()
     assert store
     assert "example" in store
-    assert await store.resolve(lambda example: 2 * example)() == "foofoo"
+    assert await store.consumer(lambda example: 2 * example)() == "foofoo"

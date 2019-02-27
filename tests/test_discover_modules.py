@@ -20,7 +20,7 @@ async def test_discover_providers(store: Store):
     store.discover_providers("notes")
     assert store
     assert "pitch" in store
-    assert await store.resolve(lambda pitch: 2 * pitch)() == "C#C#"
+    assert await store.consumer(lambda pitch: 2 * pitch)() == "C#C#"
 
 
 def test_if_module_does_not_exist_then_error(store: Store):

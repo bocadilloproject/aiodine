@@ -118,7 +118,7 @@ class Store:
 
         return ResolvedProviders(positional=positional, keyword=keyword)
 
-    def resolve(
+    def consumer(
         self, consumer: Union[Callable, CoroutineFunction]
     ) -> CoroutineFunction:
         if not inspect.iscoroutinefunction(consumer):
@@ -156,9 +156,9 @@ class Store:
         return with_providers
 
     def freeze(self):
-        """Resolve providers used by each provider."""
+        """Resolve providers consumed by each provider."""
         for prov in self.providers.values():
-            prov.func = self.resolve(prov.func)
+            prov.func = self.consumer(prov.func)
 
     @contextmanager
     def will_freeze(self):

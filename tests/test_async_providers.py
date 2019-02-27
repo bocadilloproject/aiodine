@@ -11,11 +11,11 @@ async def test_use_async_provider(store: Store):
     async def pitch():
         return "C#"
 
-    @store.resolve
+    @store.consumer
     def play_sync(pitch):
         return 2 * "C#"
 
-    @store.resolve
+    @store.consumer
     async def play_async(pitch):
         return 2 * "C#"
 
@@ -28,7 +28,7 @@ async def test_lazy_async_provider(store: Store):
     async def pitch():
         return "C#"
 
-    @store.resolve
+    @store.consumer
     async def play(pitch):
         assert iscoroutine(pitch)
         return 2 * await pitch

@@ -18,7 +18,7 @@ async def test_provider_uses_provider(store: Store):
         def b(a):
             return a * 2
 
-    func = store.resolve(lambda b: 2 * b)
+    func = store.consumer(lambda b: 2 * b)
     assert await func() == "aaaa"
 
 
@@ -33,7 +33,7 @@ async def test_provider_uses_provider_declared_later(store: Store):
         def a():
             return "a"
 
-    func = store.resolve(lambda b: 2 * b)
+    func = store.consumer(lambda b: 2 * b)
     assert await func() == "aaaa"
 
 
