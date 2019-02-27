@@ -178,7 +178,3 @@ See [CHANGELOG.md](https://github.com/bocadilloproject/aiodine/blob/master/CHANG
 ## License
 
 MIT
-
-```
-
-```
