@@ -17,7 +17,7 @@ def default_module(store: Store):
 
 def test_if_no_provider_conf_then_ok(store: Store):
     store.discover_default()
-    assert not store
+    assert store.empty
 
 
 @pytest.mark.asyncio
@@ -25,5 +25,5 @@ def test_if_no_provider_conf_then_ok(store: Store):
 async def test_if_providerconf_then_providers_are_loaded(store: Store):
     store.discover_default()
     assert store
-    assert "example" in store
+    assert store.has_provider("example")
     assert await store.consumer(lambda example: 2 * example)() == "foofoo"

@@ -19,7 +19,7 @@ def notes_module(store: Store):
 async def test_discover_providers(store: Store):
     store.discover_providers("notes")
     assert store
-    assert "pitch" in store
+    assert store.has_provider("pitch")
     assert await store.consumer(lambda pitch: 2 * pitch)() == "C#C#"
 
 

@@ -2,7 +2,7 @@ import inspect
 from contextlib import contextmanager, suppress
 from functools import partial, wraps
 from importlib import import_module
-from typing import Any, Callable, Dict, List, Optional, Union, NamedTuple
+from typing import Callable, Dict, List, Optional, Union, NamedTuple
 
 from . import scopes
 from .compat import AsyncExitStack, wrap_async
@@ -37,7 +37,7 @@ class Store:
     def empty(self):
         return not self.providers
 
-    def _exists(self, name: str) -> bool:
+    def has_provider(self, name: str) -> bool:
         return name in self.providers
 
     def _get(self, name: str) -> Optional[Provider]:
@@ -164,9 +164,3 @@ class Store:
     def will_freeze(self):
         yield
         self.freeze()
-
-    def __contains__(self, element: Any) -> bool:
-        return self._exists(element)
-
-    def __bool__(self) -> bool:
-        return not self.empty
