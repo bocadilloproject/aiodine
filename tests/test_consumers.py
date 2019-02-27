@@ -8,7 +8,7 @@ from aiodine.exceptions import ProviderDeclarationError
 pytestmark = pytest.mark.asyncio
 
 
-async def test_resolve_for_func_returns_coroutine_function(store: Store):
+async def test_consumer_returns_coroutine_function(store: Store):
     func = store.consumer(lambda: "test")
     assert inspect.iscoroutinefunction(func)
 
@@ -60,7 +60,7 @@ async def test_non_provider_parameters_after_provider_parameters_ok(
     assert await play(duration=1) == ("C#", 1)
 
 
-async def test_provider_parameters_before_provider_parameters_fails(
+async def test_non_provider_parameters_before_provider_parameters_fails(
     store: Store
 ):
     @store.provider
@@ -74,7 +74,7 @@ async def test_provider_parameters_before_provider_parameters_fails(
             pass
 
 
-async def test_resolve_async_function(store: Store):
+async def test_async_consumer(store: Store):
     @store.provider
     def pitch():
         return "C#"
