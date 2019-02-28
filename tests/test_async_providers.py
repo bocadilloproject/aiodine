@@ -37,10 +37,9 @@ async def test_lazy_async_provider(store: Store):
     assert await play() == "C#C#"
 
 
-@pytest.mark.parametrize("scope", (scopes.SESSION, "other"))
-async def test_lazy_provider_must_be_function_scoped(store: Store, scope):
+async def test_lazy_provider_must_be_function_scoped(store: Store):
     with pytest.raises(ProviderDeclarationError):
 
-        @store.provider(lazy=True, scope=scope)
+        @store.provider(lazy=True, scope=scopes.SESSION)
         async def pitch():
             pass

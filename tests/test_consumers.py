@@ -1,4 +1,5 @@
 import inspect
+from functools import partial
 
 import pytest
 

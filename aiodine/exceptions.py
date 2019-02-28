@@ -1,5 +1,13 @@
-class ProviderDeclarationError(Exception):
-    """Base exception for situations when a provider was ill-declared."""
+class AiodineException(Exception):
+    """Base exceptions for the aiodine package."""
+
+
+class ConsumerDeclarationError(AiodineException):
+    """Base exception for when a consumer is ill-declared."""
+
+
+class ProviderDeclarationError(AiodineException):
+    """Base exception for when a provider is ill-declared."""
 
 
 class RecursiveProviderError(ProviderDeclarationError):
@@ -13,5 +21,5 @@ class RecursiveProviderError(ProviderDeclarationError):
         super().__init__(message)
 
 
-class UnknownScope(ProviderDeclarationError):
+class UnknownScope(AiodineException):
     """Raised when an unknown scope is used."""

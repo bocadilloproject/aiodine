@@ -8,6 +8,7 @@ from . import scopes
 from .compat import AsyncExitStack, wrap_async
 from .datatypes import CoroutineFunction
 from .exceptions import (
+    ConsumerDeclarationError,
     ProviderDeclarationError,
     RecursiveProviderError,
     UnknownScope,
@@ -144,12 +145,21 @@ class Store:
         return ResolvedProviders(positional=positional, keyword=keyword)
 
     def consumer(
-        self, consumer: Union[Callable, CoroutineFunction]
+        self, consumer: Union[partial, Callable, CoroutineFunction]
     ) -> CoroutineFunction:
-        if not inspect.iscoroutinefunction(consumer):
+        if isinstance(consumer, partial):
+            if not inspect.iscoroutinefunction(consumer.func):
+                raise ConsumerDeclarationError(
+                    "'partial' consumers must wrap an async function"
+                )
+        elif not inspect.iscoroutinefunction(consumer):
             consumer = wrap_async(consumer)
 
-        assert inspect.iscoroutinefunction(consumer)
+        assert (
+            isinstance(consumer, partial)
+            and inspect.iscoroutinefunction(consumer.func)
+            or inspect.iscoroutinefunction(consumer)
+        )
 
         providers = self._resolve_providers(consumer)
 
