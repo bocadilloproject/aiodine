@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- Fix an issue that occured when a consumer was an instance of `functools.partial`.
+
 ## [v0.1.1] - 2019-02-28
 
 ### Added
