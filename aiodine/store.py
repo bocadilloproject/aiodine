@@ -51,7 +51,6 @@ class Store:
         self.default_scope = default_scope
         self.providers_module = providers_module
 
-    @property
     def empty(self):
         return not self.providers
 

@@ -7,6 +7,7 @@ _STORE = Store()
 provider = _STORE.provider
 consumer = _STORE.consumer
 has_provider = _STORE.has_provider
+providers_module = _STORE.providers_module
 empty = _STORE.empty
 discover = _STORE.discover
 discover_default = _STORE.discover_default
