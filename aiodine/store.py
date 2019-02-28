@@ -30,20 +30,26 @@ class ResolvedProviders(NamedTuple):
 
 class Store:
 
-    __slots__ = ("providers", "_scopes_map", "_default_scope")
+    __slots__ = (
+        "providers",
+        "scope_aliases",
+        "default_scope",
+        "providers_module",
+    )
 
-    DEFAULT_PROVIDERS_MODULE = "providerconf"
-
-    def __init__(self, scopes_map: dict = None):
-        if scopes_map is None:
-            scopes_map = {
-                scopes.FUNCTION: scopes.FUNCTION,
-                scopes.SESSION: scopes.SESSION,
-            }
+    def __init__(
+        self,
+        providers_module="providerconf",
+        scope_aliases: Dict[str, str] = None,
+        default_scope: str = scopes.FUNCTION,
+    ):
+        if scope_aliases is None:
+            scope_aliases = {}
 
         self.providers: Dict[str, Provider] = {}
-        self._scopes_map = scopes_map
-        self._default_scope = scopes_map.get(None, scopes.FUNCTION)
+        self.scope_aliases = scope_aliases
+        self.default_scope = default_scope
+        self.providers_module = providers_module
 
     @property
     def empty(self):
@@ -57,7 +63,7 @@ class Store:
 
     def discover_default(self):
         with suppress(ImportError):
-            self.discover(self.DEFAULT_PROVIDERS_MODULE)
+            self.discover(self.providers_module)
 
     def discover(self, *module_paths: str):
         for module_path in module_paths:
@@ -74,12 +80,12 @@ class Store:
             return partial(self.provider, scope=scope, name=name, lazy=lazy)
 
         if scope is None:
-            scope = self._default_scope
+            scope = self.default_scope
         else:
-            try:
-                scope = self._scopes_map[scope]
-            except KeyError as exc:
-                raise UnknownScope(scope) from exc
+            scope = self.scope_aliases.get(scope, scope)
+
+        if scope not in scopes.ALL:
+            raise UnknownScope(scope)
 
         if name is None:
             name = func.__name__
