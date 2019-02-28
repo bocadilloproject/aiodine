@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- Scope aliases: allows a store's `@provider` decorator to accept a scope equivalent to (but different from) one of `function` or `session`. For example: `app -> session`.
+- The `providers_module` is now configurable on `Store`.
+- The (non-aliased) `default_scope` is now configurable on `Store`.
+
+### Changed
+
+- `Store.empty` is now a callable instead of a property.
+
 ## [v0.1.0] - 2019-02-28
 
 Initial release.
