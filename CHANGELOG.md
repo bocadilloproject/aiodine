@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [v0.1.2] - 2019-02-28
+
 ### Fixed
 
 - Fix an issue that occured when a consumer was an instance of `functools.partial`.
@@ -39,6 +41,7 @@ Initial release.
 - Nested providers: providers can consume other providers.
 - Use the `aiodine` module directly or create a separate `Store`.
 
-[unreleased]: https://github.com/bocadilloproject/aiodine/compare/v0.1.1...HEAD
+[unreleased]: https://github.com/bocadilloproject/aiodine/compare/v0.1.2...HEAD
+[v0.1.2]: https://github.com/bocadilloproject/aiodine/compare/v0.1.1...v0.1.2
 [v0.1.1]: https://github.com/bocadilloproject/aiodine/compare/v0.1.0...v0.1.1
 [v0.1.0]: https://github.com/bocadilloproject/aiodine/releases/tag/v0.1.0

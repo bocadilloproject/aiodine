@@ -11,7 +11,7 @@ GITHUB = "https://github.com/bocadilloproject/aiodine"
 
 setuptools.setup(
     name="aiodine",
-    version="0.1.1",
+    version="0.1.2",
     author="Florimond Manca",
     author_email="florimond.manca@gmail.com",
     description=description,
