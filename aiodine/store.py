@@ -184,7 +184,3 @@ class Store:
     def exit_freeze(self):
         yield
         self.freeze()
-
-
-def map_scopes(mapping: Dict[str, str]) -> Callable:
-    pass
