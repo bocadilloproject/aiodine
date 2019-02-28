@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [v0.1.1] - 2019-02-28
+
 ### Added
 
 - Scope aliases: allows a store's `@provider` decorator to accept a scope equivalent to (but different from) one of `function` or `session`. For example: `app -> session`.
@@ -33,5 +35,6 @@ Initial release.
 - Nested providers: providers can consume other providers.
 - Use the `aiodine` module directly or create a separate `Store`.
 
-[unreleased]: https://github.com/bocadilloproject/aiodine/compare/v0.1.0...HEAD
+[unreleased]: https://github.com/bocadilloproject/aiodine/compare/v0.1.1...HEAD
+[v0.1.1]: https://github.com/bocadilloproject/aiodine/compare/v0.1.0...v0.1.1
 [v0.1.0]: https://github.com/bocadilloproject/aiodine/releases/tag/v0.1.0
