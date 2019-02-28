@@ -11,3 +11,7 @@ class RecursiveProviderError(ProviderDeclarationError):
             f"{first} and {second} depend on each other."
         )
         super().__init__(message)
+
+
+class UnknownScope(ProviderDeclarationError):
+    """Raised when an unknown scope is used."""

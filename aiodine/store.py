@@ -7,7 +7,11 @@ from typing import Callable, Dict, List, Optional, Union, NamedTuple
 from . import scopes
 from .compat import AsyncExitStack, wrap_async
 from .datatypes import CoroutineFunction
-from .exceptions import ProviderDeclarationError, RecursiveProviderError
+from .exceptions import (
+    ProviderDeclarationError,
+    RecursiveProviderError,
+    UnknownScope,
+)
 from .providers import Provider
 
 
@@ -26,12 +30,20 @@ class ResolvedProviders(NamedTuple):
 
 class Store:
 
-    __slots__ = ("providers",)
+    __slots__ = ("providers", "_scopes_map", "_default_scope")
 
     DEFAULT_PROVIDERS_MODULE = "providerconf"
 
-    def __init__(self):
+    def __init__(self, scopes_map: dict = None):
+        if scopes_map is None:
+            scopes_map = {
+                scopes.FUNCTION: scopes.FUNCTION,
+                scopes.SESSION: scopes.SESSION,
+            }
+
         self.providers: Dict[str, Provider] = {}
+        self._scopes_map = scopes_map
+        self._default_scope = scopes_map.get(None, scopes.FUNCTION)
 
     @property
     def empty(self):
@@ -54,12 +66,20 @@ class Store:
     def provider(
         self,
         func: Callable = None,
-        scope: str = scopes.FUNCTION,
+        scope: str = None,
         name: str = None,
         lazy: bool = False,
     ) -> Provider:
         if func is None:
             return partial(self.provider, scope=scope, name=name, lazy=lazy)
+
+        if scope is None:
+            scope = self._default_scope
+        else:
+            try:
+                scope = self._scopes_map[scope]
+            except KeyError as exc:
+                raise UnknownScope(scope) from exc
 
         if name is None:
             name = func.__name__
@@ -164,3 +184,7 @@ class Store:
     def exit_freeze(self):
         yield
         self.freeze()
+
+
+def map_scopes(mapping: Dict[str, str]) -> Callable:
+    pass
