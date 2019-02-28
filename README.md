@@ -23,6 +23,12 @@ pip install aiodine
 
 aiodine revolves around two concepts: **providers** and **consumers**.
 
+Providers are:
+
+- **Explicit**: once a provider is defined, a consumer can use it by declaring it as a function parameter.
+- **Modular**: a provider can itself use other provider.
+- **Flexible**: providers are reusable within the scope of a function or a whole session, and support a variety of syntaxes (asynchronous or synchronous, function or generator) to make provisioning resources fun again.
+
 ### Providers
 
 **Providers** make a _resource_ available to consumers within a certain _scope_. They are created by decorating a **provider function** with `@aiodine.provider`.
