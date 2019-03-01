@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- Parameters are now correctly resolved regardless of the positioning of provider parameters relative to non-provider parameters.
+
 ## [v0.1.2] - 2019-02-28
 
 ### Fixed
