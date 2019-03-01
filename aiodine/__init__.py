@@ -14,4 +14,4 @@ discover_default = _STORE.discover_default
 freeze = _STORE.freeze
 exit_freeze = _STORE.exit_freeze
 
-__version__ = "0.1.2"
+__version__ = "0.1.3"
