@@ -1,10 +1,7 @@
 import inspect
-from functools import partial
 
 import pytest
-
 from aiodine import Store
-from aiodine.exceptions import ProviderDeclarationError
 
 pytestmark = pytest.mark.asyncio
 
@@ -61,18 +58,20 @@ async def test_non_provider_parameters_after_provider_parameters_ok(
     assert await play(duration=1) == ("C#", 1)
 
 
-async def test_non_provider_parameters_before_provider_parameters_fails(
+async def test_non_provider_parameters_before_provider_parameters_ok(
     store: Store
 ):
     @store.provider
     def pitch():
         return "C#"
 
-    with pytest.raises(ProviderDeclarationError):
+    @store.consumer
+    def play(duration, pitch):
+        assert pitch == "C#"
+        return (pitch, duration)
 
-        @store.consumer
-        def play(duration, pitch):
-            pass
+    assert await play(1) == ("C#", 1)
+    assert await play(duration=1) == ("C#", 1)
 
 
 async def test_async_consumer(store: Store):

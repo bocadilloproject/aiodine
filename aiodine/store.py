@@ -2,22 +2,23 @@ import inspect
 from contextlib import contextmanager, suppress
 from functools import partial, wraps
 from importlib import import_module
-from typing import Callable, Dict, List, Optional, Union, NamedTuple
+from typing import Callable, Dict, List, NamedTuple, Optional, Tuple, Union
 
 from . import scopes
 from .compat import AsyncExitStack, wrap_async
 from .datatypes import CoroutineFunction
 from .exceptions import (
     ConsumerDeclarationError,
-    ProviderDeclarationError,
     RecursiveProviderError,
     UnknownScope,
 )
 from .providers import Provider
 
-
-PositionalProviders = List[Provider]
+PositionalProviders = List[Tuple[str, Provider]]
 KeywordProviders = Dict[str, Provider]
+
+# Sentinel for parameters that have no provider.
+_NO_PROVIDER = object()
 
 
 class ResolvedProviders(NamedTuple):
@@ -121,26 +122,19 @@ class Store:
         # NOTE: This flag goes down when we process a non-provider parameter.
         # It allows to detect provider parameters declared *after*
         # non-provider parameters.
-        processing_providers = True
+        # processing_providers = True
 
         for name, parameter in inspect.signature(consumer).parameters.items():
             prov: Optional[Provider] = self.providers.get(name)
 
             if prov is None:
-                processing_providers = False
+                positional.append((name, _NO_PROVIDER))
                 continue
-
-            if not processing_providers:
-                raise ProviderDeclarationError(
-                    "Provider parameters must be declared *before* other "
-                    "parameters, so that they can be deterministically passed "
-                    "to the consumer."
-                )
 
             if parameter.kind == inspect.Parameter.KEYWORD_ONLY:
                 keyword[name] = prov
             else:
-                positional.append(prov)
+                positional.append((name, prov))
 
         return ResolvedProviders(positional=positional, keyword=keyword)
 
@@ -168,25 +162,35 @@ class Store:
 
         @wraps(consumer)
         async def with_providers(*args, **kwargs):
-            # Evaluate the providers when the function is actually called.
             async with AsyncExitStack() as stack:
 
-                async def _get_value(prov):
-                    return prov(stack) if prov.lazy else await prov(stack)
+                async def _get_value(prov: Provider):
+                    if prov.lazy:
+                        return prov(stack)
+                    return await prov(stack)
 
-                injected_args = [
-                    await _get_value(prov) for prov in providers.positional
-                ]
+                args = list(args)
+                injected_args = []
+                for name, prov in providers.positional:
+                    if prov is _NO_PROVIDER:
+                        # No provider exists for this argument. Get it from
+                        # `kwargs` in priority, and default to `args`.
+                        if name in kwargs:
+                            injected_args.append(kwargs.pop(name))
+                            continue
+                        with suppress(IndexError):
+                            injected_args.append(args.pop())
+                        continue
+                    # A provider exists for this argument. Use it!
+                    injected_args.append(await _get_value(prov))
+
                 injected_kwargs = {
                     name: await _get_value(prov)
                     for name, prov in providers.keyword.items()
+                    if name in kwargs
                 }
 
-                # NOTE: injected args must be given first by convention.
-                # The order for kwargs should not matter.
-                return await consumer(
-                    *injected_args, *args, **injected_kwargs, **kwargs
-                )
+                return await consumer(*injected_args, **injected_kwargs)
 
         return with_providers
 
