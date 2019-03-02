@@ -10,6 +10,7 @@ rope = "*"
 pytest = "*"
 pytest-asyncio = "*"
 bumpversion = "*"
+pytest-cov = "*"
 
 [packages]
 aiodine = {path = "."}

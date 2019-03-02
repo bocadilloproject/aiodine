@@ -1,7 +1,9 @@
 import inspect
+from functools import partial
 
 import pytest
 from aiodine import Store
+from aiodine.exceptions import ConsumerDeclarationError
 
 pytestmark = pytest.mark.asyncio
 
@@ -84,3 +86,24 @@ async def test_async_consumer(store: Store):
         return 2 * pitch
 
     assert await play() == "C#C#"
+
+
+async def test_handle_keyword_only_parameters(store: Store):
+    @store.provider
+    async def pitch():
+        return "C#"
+
+    @store.consumer
+    async def play(*, pitch):
+        return 2 * pitch
+
+    assert await play() == "C#C#"
+
+
+async def test_if_wrapper_then_wrapped_must_be_async(store: Store):
+    @partial
+    def not_async():
+        pass
+
+    with pytest.raises(ConsumerDeclarationError):
+        store.consumer(not_async)

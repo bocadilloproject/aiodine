@@ -157,12 +157,14 @@ class Store:
     def consumer(
         self, consumer: Union[partial, Callable, CoroutineFunction]
     ) -> CoroutineFunction:
-        if isinstance(consumer, partial):
-            if not inspect.iscoroutinefunction(consumer.func):
-                raise ConsumerDeclarationError(
-                    "'partial' consumers must wrap an async function"
-                )
-        elif not inspect.iscoroutinefunction(consumer):
+        if isinstance(consumer, partial) and not inspect.iscoroutinefunction(
+            consumer.func
+        ):
+            raise ConsumerDeclarationError(
+                "'partial' consumers must wrap an async function"
+            )
+
+        if not inspect.iscoroutinefunction(consumer):
             consumer = wrap_async(consumer)
 
         assert (
@@ -206,7 +208,7 @@ class Store:
                 injected_kwargs = {
                     name: await _get_value(prov)
                     for name, prov in providers.keyword.items()
-                    if name in kwargs
+                    if name not in kwargs
                 }
 
                 return await consumer(*injected_args, **injected_kwargs)
