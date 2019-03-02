@@ -21,9 +21,11 @@ class Provider:
     some metadata.
     """
 
-    __slots__ = ("func", "name", "scope", "lazy")
+    __slots__ = ("func", "name", "scope", "lazy", "autouse")
 
-    def __init__(self, func: Callable, name: str, scope: str, lazy: bool):
+    def __init__(
+        self, func: Callable, name: str, scope: str, lazy: bool, autouse: bool
+    ):
         if lazy and scope != scopes.FUNCTION:
             raise ProviderDeclarationError(
                 "Lazy providers must be function-scoped"
@@ -44,6 +46,7 @@ class Provider:
         self.name = name
         self.scope = scope
         self.lazy = lazy
+        self.autouse = autouse
 
     @classmethod
     def create(cls, func, **kwargs) -> "Provider":

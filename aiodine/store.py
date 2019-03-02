@@ -25,9 +25,10 @@ class ResolvedProviders(NamedTuple):
 
     positional: PositionalProviders
     keyword: KeywordProviders
+    auto: List[Provider]
 
     def __bool__(self):
-        return bool(self.positional) or bool(self.keyword)
+        return bool(self.positional) or bool(self.keyword) or bool(self.auto)
 
 
 class Store:
@@ -38,6 +39,7 @@ class Store:
         "default_scope",
         "providers_module",
         "_session_providers",
+        "_autouse_providers",
     )
 
     def __init__(
@@ -51,6 +53,7 @@ class Store:
 
         self.providers: Dict[str, Provider] = {}
         self._session_providers: Dict[str, SessionProvider] = {}
+        self._autouse_providers: Dict[str, Provider] = {}
         self.scope_aliases = scope_aliases
         self.default_scope = default_scope
         self.providers_module = providers_module
@@ -78,9 +81,16 @@ class Store:
         scope: str = None,
         name: str = None,
         lazy: bool = False,
+        autouse: bool = False,
     ) -> Provider:
         if func is None:
-            return partial(self.provider, scope=scope, name=name, lazy=lazy)
+            return partial(
+                self.provider,
+                scope=scope,
+                name=name,
+                lazy=lazy,
+                autouse=autouse,
+            )
 
         if scope is None:
             scope = self.default_scope
@@ -95,7 +105,9 @@ class Store:
 
         # NOTE: save the new provider before checking for recursion,
         # so that its dependants can detect it as a dependency.
-        prov = Provider.create(func, name=name, scope=scope, lazy=lazy)
+        prov = Provider.create(
+            func, name=name, scope=scope, lazy=lazy, autouse=autouse
+        )
         self._add(prov)
 
         self._check_for_recursive_providers(name, func)
@@ -106,6 +118,8 @@ class Store:
         self.providers[prov.name] = prov
         if isinstance(prov, SessionProvider):
             self._session_providers[prov.name] = prov
+        if prov.autouse:
+            self._autouse_providers[prov.name] = prov
 
     def _check_for_recursive_providers(self, name: str, func: Callable):
         for other_name, other in self._get_providers(func).items():
@@ -122,11 +136,7 @@ class Store:
     def _resolve_providers(self, consumer: Callable) -> ResolvedProviders:
         positional: PositionalProviders = []
         keyword: KeywordProviders = {}
-
-        # NOTE: This flag goes down when we process a non-provider parameter.
-        # It allows to detect provider parameters declared *after*
-        # non-provider parameters.
-        # processing_providers = True
+        auto = list(self._autouse_providers.values())
 
         for name, parameter in inspect.signature(consumer).parameters.items():
             prov: Optional[Provider] = self.providers.get(name)
@@ -140,7 +150,9 @@ class Store:
             else:
                 positional.append((name, prov))
 
-        return ResolvedProviders(positional=positional, keyword=keyword)
+        return ResolvedProviders(
+            positional=positional, keyword=keyword, auto=auto
+        )
 
     def consumer(
         self, consumer: Union[partial, Callable, CoroutineFunction]
@@ -174,6 +186,9 @@ class Store:
                     if prov.lazy:
                         return prov(stack)
                     return await prov(stack)
+
+                for prov in providers.auto:
+                    await _get_value(prov)
 
                 args = list(args)
                 injected_args = []

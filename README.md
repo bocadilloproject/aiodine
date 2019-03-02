@@ -258,6 +258,21 @@ async with aiodine.session():
     ...
 ```
 
+### Auto-used providers
+
+Auto-used providers are **automatically activated** (within their configured scope) without having to declare them as a parameter in the consumer.
+
+For exmaple, the auto-used provider below would result in printing the current date and time to the console every time a consumer is called.
+
+```python
+import datetime
+import aiodine
+
+@aiodine.provider(autouse=True)
+async def logdatetime():
+    print(datetime.now())
+```
+
 ## FAQ
 
 ### Why "aiodine"?
