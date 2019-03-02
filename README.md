@@ -258,11 +258,40 @@ async with aiodine.session():
     ...
 ```
 
+### Using providers without declaring them as parameters
+
+If a consumer needs to use a provider but not its return value, you use the `@useprovider` decorator and skip declaring it as a parameter.
+
+This decorator accepts a variable number of providers, given either by name or by reference.
+
+```python
+import os
+import aiodine
+
+@aiodine.provider
+def cache():
+    os.makedirs("cache", exist_ok=True)
+
+@aiodine.provider
+def debug_log_file():
+    with open("debug.log", "w"):
+        pass
+    yield
+    os.remove("debug.log")
+
+@aiodine.consumer
+@aiodine.useprovider("cache", debug_log_file)
+async def build_index():
+    ...
+```
+
 ### Auto-used providers
 
 Auto-used providers are **automatically activated** (within their configured scope) without having to declare them as a parameter in the consumer.
 
-For exmaple, the auto-used provider below would result in printing the current date and time to the console every time a consumer is called.
+This can typically spare you from decorating all your consumers with an `@useprovider`.
+
+For example, the auto-used provider below would result in printing the current date and time to the console every time a consumer is called.
 
 ```python
 import datetime
