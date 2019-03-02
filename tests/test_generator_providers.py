@@ -25,7 +25,7 @@ async def test_sync_function_yield_provider(store: Store):
     assert teardown
 
 
-async def test_async_function_yield_provider(store: Store):
+async def test_async_function_generator_provider(store: Store):
     setup = False
     teardown = False
 
@@ -41,5 +41,32 @@ async def test_async_function_yield_provider(store: Store):
         return resource.upper()
 
     assert await consumer() == "RESOURCE"
+    assert setup
+    assert teardown
+
+
+async def test_session_generator_provider(store: Store):
+    setup = False
+    teardown = False
+
+    @store.provider(scope="session")
+    async def resource():
+        nonlocal setup, teardown
+        setup = True
+        yield "resource"
+        teardown = True
+
+    @store.consumer
+    def consumer(resource: str):
+        return resource.upper()
+
+    async with store.session():
+        assert setup
+        assert not teardown
+
+        assert await consumer() == "RESOURCE"
+        assert setup
+        assert not teardown
+
     assert setup
     assert teardown

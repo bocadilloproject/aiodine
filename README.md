@@ -133,7 +133,7 @@ Generator providers can be used to perform cleanup operations after a provider h
 import os
 import aiodine
 
-@aiodine.provider(scope="session")
+@aiodine.provider
 async def testing():
     initial = os.getenv("APP_ENV")
     os.environ["APP_ENV"] = "TESTING"
@@ -144,6 +144,8 @@ async def testing():
         if initial is not None:
             os.environ["APP_ENV"] = initial
 ```
+
+**Note**: session generator providers will only be cleaned up if using them in the context of a session. See [Sessions](#sessions) for details.
 
 > **Tip**: synchronous generator providers are also supported!
 
@@ -231,6 +233,31 @@ def tmpfile():
         os.remove(path)
 ```
 
+### Sessions
+
+A **session** is the context in which _session providers_ live.
+
+More specifically, session providers (resp. generator session providers) are instanciated (resp. setup) when entering a session, and destroyed (resp. cleaned up) when exiting the session.
+
+To enter a session, use:
+
+```python
+await aiodine.enter_session()
+```
+
+To exit it:
+
+```python
+await aiodine.exit_session()
+```
+
+An async context manager syntax is also available:
+
+```python
+async with aiodine.session():
+    ...
+```
+
 ## FAQ
 
 ### Why "aiodine"?
@@ -246,3 +273,5 @@ See [CHANGELOG.md](https://github.com/bocadilloproject/aiodine/blob/master/CHANG
 ## License
 
 MIT
+
+[bocadillo]: https://github.com/bocadilloproject/bocadillo
