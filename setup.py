@@ -18,7 +18,7 @@ setuptools.setup(
     long_description=long_description,
     long_description_content_type="text/markdown",
     packages=setuptools.find_packages(),
-    install_requires=["async_exit_stack==1.0.1"],
+    install_requires=["async_exit_stack==1.0.1;python<'3.7'"],
     url=GITHUB,
     license="MIT",
     classifiers=[

@@ -1,7 +1,10 @@
 from functools import wraps
 from typing import AsyncGenerator, Awaitable, Callable, Generator
 
-from async_exit_stack import AsyncExitStack  # pylint: disable=unused-import
+try:
+    from contextlib import AsyncExitStack  # pylint: disable=unused-import
+except ImportError:  # pragma: no cover
+    from async_exit_stack import AsyncExitStack
 
 
 def wrap_async(func: Callable) -> Callable[..., Awaitable]:
