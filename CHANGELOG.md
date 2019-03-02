@@ -9,11 +9,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- Use providers whose return value is not important via the `@useprovider` decorator.
 - Auto-used providers — activated without having to declare them in consumer parameters.
 
 ### Fixed
 
 - Providers declared as keyword-only parameters in consumers are now properly injected.
+- Require that Python 3.6+ is installed at the package level.
 
 ## [v0.2.0] - 2019-03-02
 
