@@ -171,6 +171,68 @@ async def compute(expensive_computation, cache=None):
     return await expensive_computation
 ```
 
+### Factory providers
+
+Instead of returning a value, a factory provider returns a _function_. This allows to build providers that can be reused for a variety of inputs.
+
+This is a _design pattern_ more than anything else. In fact, there's no extra code in aiodine to support this feature.
+
+The following example defines a factory provider for a (simulated) database query:
+
+```python
+import aiodine
+
+@aiodine.provider(scope="session")
+async def notes():
+    # Some hard-coded sticky notes.
+    return [
+        {"id": 1, "text": "Groceries"},
+        {"id": 2, "text": "Make potatoe smash"},
+    ]
+
+@aiodine.provider
+async def get_note(notes):
+    async def _get_note(pk: int) -> list:
+        try:
+            # TODO: fetch from a database instead?
+            return next(note for note in notes if note["id"] == pk)
+        except StopIteration:
+            raise HTTPError(404, detail=f"Note with ID {pk} does not exist.")
+
+    return _get_note
+```
+
+Example usage in a consumer:
+
+```python
+@aiodine.consumer
+async def show_note(pk: int, get_note):
+    print(await get_note(pk))
+```
+
+**Tip**: you can combine factory providers with [generator providers](#generator-providers) to cleanup any resources the factory needs to use.
+
+Here's an example that provides temporary files and removes them on cleanup:
+
+```python
+import os
+import aiodine
+
+@aiodine.provider(scope="session")
+def tmpfile():
+    files = set()
+
+    async def _create_tmpfile(path: str):
+        with open(path, "w") as tmp:
+            files.add(path)
+            return tmp
+
+    yield _create_tmpfile
+
+    for path in files:
+        os.remove(path)
+```
+
 ### Sessions
 
 A **session** is the context in which _session providers_ live.
