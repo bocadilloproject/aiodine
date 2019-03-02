@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- Session-scoped generator providers, both sync and async.
+- Documentation for the factory provider pattern.
+- Session enter/exit utils: `store.enter_session()`, `store.exit_session()`, `async with store.session()`. Allows to manually trigger the setup/cleanup of session-scoped providers.
+
 ## [v0.1.3] - 2019-03-01
 
 ### Fixed
