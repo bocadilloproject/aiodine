@@ -20,11 +20,11 @@ def test_default_scope(store, expected_scope):
     assert items.scope == expected_scope
 
 
-@pytest.mark.asyncio
 @pytest.mark.parametrize(
     "scope, expected_second_call",
     [(scopes.SESSION, [1, 2]), (scopes.FUNCTION, [2])],
 )
+@pytest.mark.asyncio
 async def test_reuse_of_provided_values(
     store: Store, scope, expected_second_call
 ):
@@ -41,7 +41,6 @@ async def test_reuse_of_provided_values(
     assert await add(2) == expected_second_call
 
 
-@pytest.mark.asyncio
 @pytest.mark.parametrize(
     "aliases, scope, expected",
     [
@@ -56,6 +55,7 @@ async def test_reuse_of_provided_values(
         [{"foo": scopes.FUNCTION}, scopes.SESSION, scopes.SESSION],
     ],
 )
+@pytest.mark.asyncio
 async def test_scope_aliases(aliases, scope, expected):
     store = Store(scope_aliases=aliases)
 

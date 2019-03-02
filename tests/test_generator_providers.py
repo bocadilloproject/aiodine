@@ -60,13 +60,9 @@ async def test_session_generator_provider(store: Store):
     def consumer(resource: str):
         return resource.upper()
 
-    async with store.session():
-        assert setup
-        assert not teardown
-
-        assert await consumer() == "RESOURCE"
-        assert setup
-        assert not teardown
-
+    assert await consumer() == "RESOURCE"
     assert setup
+    assert not teardown
+
+    await store.exit_session()
     assert teardown
