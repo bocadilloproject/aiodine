@@ -15,7 +15,7 @@ async def _terminate_agen(async_gen: AsyncGenerator):
 
 
 class Provider:
-    """Represents a provider.
+    """Base class for providers.
 
     This is mostly a wrapper around a provider function, along with
     some metadata.
@@ -55,11 +55,12 @@ class Provider:
 
     def __repr__(self) -> str:
         return (
-            f"<Provider name={self.name}, scope={self.scope}, func={self.func}>"
+            f"<{self.__class__.__name__} "
+            "name={self.name}, scope={self.scope}, func={self.func}>"
         )
 
     # NOTE: the returned value is an awaitable, so we *must not*
-    # declare this function as `async` — its return value already is.
+    # declare this function as `async` — its return value should already be.
     def __call__(self, stack: AsyncExitStack) -> Awaitable:
         raise NotImplementedError
 
