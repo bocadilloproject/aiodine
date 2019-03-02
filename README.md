@@ -268,7 +268,7 @@ For exmaple, the auto-used provider below would result in printing the current d
 import datetime
 import aiodine
 
-@aiodine.provider
+@aiodine.provider(autouse=True)
 async def logdatetime():
     print(datetime.now())
 ```
