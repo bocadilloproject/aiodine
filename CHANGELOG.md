@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- Providers declared as keyword-only parameters in consumers are now properly injected.
+
 ## [v0.2.0] - 2019-03-02
 
 ### Added

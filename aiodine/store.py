@@ -191,7 +191,7 @@ class Store:
                 injected_kwargs = {
                     name: await _get_value(prov)
                     for name, prov in providers.keyword.items()
-                    if name in kwargs
+                    if name not in kwargs
                 }
 
                 return await consumer(*injected_args, **injected_kwargs)

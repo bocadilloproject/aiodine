@@ -84,3 +84,15 @@ async def test_async_consumer(store: Store):
         return 2 * pitch
 
     assert await play() == "C#C#"
+
+
+async def test_handle_keyword_only_parameters(store: Store):
+    @store.provider
+    async def pitch():
+        return "C#"
+
+    @store.consumer
+    async def play(*, pitch):
+        return 2 * pitch
+
+    assert await play() == "C#C#"
