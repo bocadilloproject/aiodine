@@ -99,15 +99,34 @@ class SessionProvider(Provider):
     across function calls.
     """
 
-    __slots__ = Provider.__slots__ + ("_instance",)
+    __slots__ = Provider.__slots__ + ("_instance", "_generator")
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self._instance: Any = None
+        self._instance: Optional[Any] = None
+        self._generator: Optional[AsyncGenerator] = None
 
-    async def _get_instance(self):
+    async def enter_session(self):
+        value: Union[Awaitable, AsyncGenerator] = self.func()
+
+        if inspect.isasyncgen(value):
+            agen = value
+            value = await agen.asend(None)
+            self._generator = agen
+        else:
+            value = await value
+
+        self._instance = value
+
+    async def exit_session(self):
+        if self._generator is not None:
+            await _terminate_agen(self._generator)
+            self._generator = None
+        self._instance = None
+
+    async def _get_instance(self) -> Any:
         if self._instance is None:
-            self._instance = await self.func()
+            await self.enter_session()
         return self._instance
 
     def __call__(self, stack: AsyncExitStack) -> Awaitable:
