@@ -25,10 +25,12 @@ class ResolvedProviders(NamedTuple):
 
     positional: PositionalProviders
     keyword: KeywordProviders
-    auto: List[Provider]
+    external: List[Provider]
 
     def __bool__(self):
-        return bool(self.positional) or bool(self.keyword) or bool(self.auto)
+        return (
+            bool(self.positional) or bool(self.keyword) or bool(self.external)
+        )
 
 
 class Store:
@@ -136,7 +138,10 @@ class Store:
     def _resolve_providers(self, consumer: Callable) -> ResolvedProviders:
         positional: PositionalProviders = []
         keyword: KeywordProviders = {}
-        auto = list(self._autouse_providers.values())
+        external = [
+            *self._autouse_providers.values(),
+            *getattr(consumer, "__useproviders__", []),
+        ]
 
         for name, parameter in inspect.signature(consumer).parameters.items():
             prov: Optional[Provider] = self.providers.get(name)
@@ -151,7 +156,7 @@ class Store:
                 positional.append((name, prov))
 
         return ResolvedProviders(
-            positional=positional, keyword=keyword, auto=auto
+            positional=positional, keyword=keyword, external=external
         )
 
     def consumer(
@@ -187,7 +192,7 @@ class Store:
                         return prov(stack)
                     return await prov(stack)
 
-                for prov in providers.auto:
+                for prov in providers.external:
                     await _get_value(prov)
 
                 args = list(args)
@@ -214,6 +219,16 @@ class Store:
                 return await consumer(*injected_args, **injected_kwargs)
 
         return with_providers
+
+    def useprovider(self, *providers: Union[str, Provider]):
+        def decorate(func):
+            func.__useproviders__ = [
+                prov if isinstance(prov, Provider) else self._get(prov)
+                for prov in providers
+            ]
+            return func
+
+        return decorate
 
     def freeze(self):
         """Resolve providers consumed by each provider."""
