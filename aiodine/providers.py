@@ -98,15 +98,33 @@ class SessionProvider(Provider):
     across function calls.
     """
 
-    __slots__ = Provider.__slots__ + ("_instance",)
+    __slots__ = Provider.__slots__ + ("_instance", "_exit_callback")
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self._instance: Any = None
+        self._exit_callback = None
 
-    async def _get_instance(self):
+    async def enter_session(self):
+        value: Union[Awaitable, AsyncGenerator] = self.func()
+
+        if inspect.isasyncgen(value):
+            agen = value
+            value = await agen.asend(None)
+            self._exit_callback = partial(_terminate_agen, agen)
+        else:
+            value = await value
+
+        self._instance = value
+
+    async def exit_session(self):
+        assert self._exit_callback is not None, "Not in a session"
+        await self._exit_callback()
+        self._exit_callback = None
+
+    async def _get_instance(self) -> Any:
         if self._instance is None:
-            self._instance = await self.func()
+            await self.enter_session()
         return self._instance
 
     def __call__(self, stack: AsyncExitStack) -> Awaitable:

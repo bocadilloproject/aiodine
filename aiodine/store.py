@@ -12,7 +12,7 @@ from .exceptions import (
     RecursiveProviderError,
     UnknownScope,
 )
-from .providers import Provider
+from .providers import Provider, SessionProvider
 
 PositionalProviders = List[Tuple[str, Provider]]
 KeywordProviders = Dict[str, Provider]
@@ -37,6 +37,7 @@ class Store:
         "scope_aliases",
         "default_scope",
         "providers_module",
+        "_session_providers",
     )
 
     def __init__(
@@ -49,6 +50,7 @@ class Store:
             scope_aliases = {}
 
         self.providers: Dict[str, Provider] = {}
+        self._session_providers: Dict[str, SessionProvider] = {}
         self.scope_aliases = scope_aliases
         self.default_scope = default_scope
         self.providers_module = providers_module
@@ -102,6 +104,8 @@ class Store:
 
     def _add(self, prov: Provider):
         self.providers[prov.name] = prov
+        if isinstance(prov, SessionProvider):
+            self._session_providers[prov.name] = prov
 
     def _check_for_recursive_providers(self, name: str, func: Callable):
         for other_name, other in self._get_providers(func).items():
@@ -203,3 +207,28 @@ class Store:
     def exit_freeze(self):
         yield
         self.freeze()
+
+    async def enter_session(self):
+        for provider in self._session_providers.values():
+            await provider.enter_session()
+
+    async def exit_session(self):
+        for provider in self._session_providers.values():
+            await provider.exit_session()
+
+    def session(self):
+        return _Session(self)
+
+
+# NOTE: can't use @asynccontextmanager from contextlib because it was
+# only added in Python 3.7.
+class _Session:
+    def __init__(self, store: Store):
+        self._store = store
+
+    async def __aenter__(self):
+        await self._store.enter_session()
+        return None
+
+    async def __aexit__(self, *args):
+        await self._store.exit_session()
