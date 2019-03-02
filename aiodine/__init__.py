@@ -15,4 +15,4 @@ freeze = _STORE.freeze
 exit_freeze = _STORE.exit_freeze
 session = _STORE.session
 
-__version__ = "0.1.3"
+__version__ = "0.2.0"
