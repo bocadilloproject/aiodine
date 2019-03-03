@@ -11,23 +11,38 @@
 
 aiodine provides async-first [dependency injection][di] in the style of [Pytest fixtures](https://docs.pytest.org/en/latest/fixture.html) for Python 3.6+.
 
+- [Installation](#installation)
+- [Concepts](#concepts)
+- [Usage](#usage)
+- [FAQ](#faq)
+- [Changelog](#changelog)
+
 ## Installation
 
 ```
 pip install aiodine
 ```
 
-## Usage
+## Concepts
 
-> Note: this section is under construction.
+aiodine revolves around two concepts:
 
-aiodine revolves around two concepts: **providers** and **consumers**.
+- **Providers** are in charge of setting up, returning and optionally cleaning up _resources_.
+- **Consumers** can access these resources by declaring the provider as one of their parameters.
 
-Providers are:
+This approach is an implementation of [Dependency Injection][di] and makes providers and consumers:
 
 - **Explicit**: once a provider is defined, a consumer can use it by declaring it as a function parameter.
-- **Modular**: a provider can itself use other provider.
+- **Modular**: a provider can itself use other providers.
 - **Flexible**: providers are reusable within the scope of a function or a whole session, and support a variety of syntaxes (asynchronous or synchronous, function or generator) to make provisioning resources fun again.
+
+aiodine is **async-first** in the sense that:
+
+- It was made to work with coroutine functions and the async/await syntax.
+- Consumers can only be called in an asynchronous setting.
+- But provider and consumer functions can be regular Python functions and generators too, if only for convenience.
+
+## Usage
 
 ### Providers
 
@@ -42,8 +57,6 @@ import aiodine
 async def hello():
     return "Hello, aiodine!"
 ```
-
-> **Tip**: synchronous provider functions are also supported!
 
 Providers are available in two **scopes**:
 
@@ -65,8 +78,6 @@ async def show_friendly_message(hello):
 
 ```
 
-> **Tip**: synchronous consumer functions are also supported!
-
 All aiodine consumers are asynchronous, so you'll need to run them in an asynchronous context:
 
 ```python
@@ -78,7 +89,7 @@ async def main():
 run(main())  # "Hello, aiodine!"
 ```
 
-Of course, a consumer can declare non-provider parameters too. These are then regular parameters and will have to be passed when calling the consumer.
+Of course, a consumer can declare non-provider parameters too. aiodine is smart enough to figure out which parameters should be injected via providers, and which should be expected from the callee.
 
 ```python
 @aiodine.consumer
@@ -143,8 +154,6 @@ async def complex_resource():
     yield "complex"
     print("cleaning up complex resource…")
 ```
-
-> **Tip**: synchronous generator providers are also supported.
 
 **Note**: session-scoped generator providers will only be cleaned up if using them in the context of a session. See [Sessions](#sessions) for details.
 
@@ -234,7 +243,7 @@ def tmpfile():
 
 Sometimes, a consumer needs to use a provider but doesn't care about the value it returns. In these situations, you can use the `@useprovider` decorator and skip declaring it as a parameter.
 
-> **Tip**: the `@useprovider` decorator accepts a variable number of providers, which can be given by name or by reference.
+**Tip**: the `@useprovider` decorator accepts a variable number of providers, which can be given by name or by reference.
 
 ```python
 import os
