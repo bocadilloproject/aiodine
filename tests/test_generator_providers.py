@@ -17,10 +17,10 @@ async def test_sync_function_yield_provider(store: Store):
         teardown = True
 
     @store.consumer
-    def consumer(resource: str):
+    def consume(resource: str):
         return resource.upper()
 
-    assert await consumer() == "RESOURCE"
+    assert await consume() == "RESOURCE"
     assert setup
     assert teardown
 
@@ -37,10 +37,10 @@ async def test_async_function_generator_provider(store: Store):
         teardown = True
 
     @store.consumer
-    def consumer(resource: str):
+    def consume(resource: str):
         return resource.upper()
 
-    assert await consumer() == "RESOURCE"
+    assert await consume() == "RESOURCE"
     assert setup
     assert teardown
 
@@ -57,12 +57,31 @@ async def test_session_generator_provider(store: Store):
         teardown = True
 
     @store.consumer
-    def consumer(resource: str):
+    def consume(resource: str):
         return resource.upper()
 
-    assert await consumer() == "RESOURCE"
+    assert await consume() == "RESOURCE"
     assert setup
     assert not teardown
 
     await store.exit_session()
+    assert teardown
+
+
+async def test_cleanup_even_if_exception_occurred(store: Store):
+    teardown = False
+
+    @store.provider
+    async def resource():
+        nonlocal teardown
+        yield "resource"
+        teardown = True
+
+    @store.consumer
+    async def consume(resource):
+        raise ValueError
+
+    with pytest.raises(ValueError):
+        await consume()
+
     assert teardown
