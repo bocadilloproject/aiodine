@@ -131,6 +131,8 @@ with aiodine.exit_freeze():
 
 Generator providers can be used to perform cleanup (finalization) operations after a provider has gone out of scope.
 
+**Tip**: cleanup code is executed even if an exception occurred in the consumer, so there's no need to surround the `yield` statement with a `try/finally` block.
+
 ```python
 import os
 import aiodine
@@ -138,15 +140,13 @@ import aiodine
 @aiodine.provider
 async def complex_resource():
     print("setting up complex resource…")
-    try:
-        yield "complex"
-    finally:
-        print("cleaning up complex resource…")
+    yield "complex"
+    print("cleaning up complex resource…")
 ```
 
 > **Tip**: synchronous generator providers are also supported.
 
-> **Note**: session-scoped generator providers will only be cleaned up if using them in the context of a session. See [Sessions](#sessions) for details.
+**Note**: session-scoped generator providers will only be cleaned up if using them in the context of a session. See [Sessions](#sessions) for details.
 
 ### Lazy async providers
 
