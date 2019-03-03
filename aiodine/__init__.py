@@ -18,4 +18,4 @@ session = _STORE.session
 enter_session = _STORE.enter_session
 exit_session = _STORE.exit_session
 
-__version__ = "0.2.0"
+__version__ = "1.0.0"
