@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- Guarantee that finalization code of generator providers gets executed even if an exception occurs in the consumer.
+
 ## [v1.0.0] - 2019-03-03
 
 ### Added
