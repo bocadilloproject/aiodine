@@ -303,10 +303,11 @@ async with aiodine.session():
 
 ### Why "aiodine"?
 
-aiodine contains "aio" as in [asyncio], and "di" as in [Dependency Injection][di]. The last two letters end up making aiodine pronounce like _iodine_, the chemical element.
+aiodine contains "aio" as in [asyncio], and "di" as in [Dependency Injection][di]. The last two letters end up making aiodine pronounce like [iodine], the chemical element.
 
 [asyncio]: https://docs.python.org/3/library/asyncio.html
 [di]: https://en.wikipedia.org/wiki/Dependency_injection
+[iodine]: https://en.wikipedia.org/wiki/Iodine
 
 ## Changelog
 
