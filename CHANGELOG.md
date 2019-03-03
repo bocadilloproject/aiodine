@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [v1.0.1] - 2019-03-03
+
 ### Fixed
 
 - Guarantee that finalization code of generator providers gets executed even if an exception occurs in the consumer.
@@ -71,7 +73,8 @@ Initial release.
 - Nested providers: providers can consume other providers.
 - Use the `aiodine` module directly or create a separate `Store`.
 
-[unreleased]: https://github.com/bocadilloproject/aiodine/compare/v1.0.0...HEAD
+[unreleased]: https://github.com/bocadilloproject/aiodine/compare/v1.0.1...HEAD
+[v1.0.1]: https://github.com/bocadilloproject/aiodine/compare/v1.0.0...v1.0.1
 [v1.0.0]: https://github.com/bocadilloproject/aiodine/compare/v0.2.0...v1.0.0
 [v0.2.0]: https://github.com/bocadilloproject/aiodine/compare/v0.1.3...v0.2.0
 [v0.1.3]: https://github.com/bocadilloproject/aiodine/compare/v0.1.2...v0.1.3
