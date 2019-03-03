@@ -32,9 +32,9 @@ aiodine revolves around two concepts:
 
 This approach is an implementation of [Dependency Injection][di] and makes providers and consumers:
 
-- **Explicit**: once a provider is defined, a consumer can use it by declaring it as a function parameter.
-- **Modular**: a provider can itself use other providers.
-- **Flexible**: providers are reusable within the scope of a function or a whole session, and support a variety of syntaxes (asynchronous or synchronous, function or generator) to make provisioning resources fun again.
+- **Explicit**: referencing providers by name on the consumer's signature makes dependencies clear and predictable.
+- **Modular**: a provider can itself consume other providers, allowing to build ecosystems of reusable (and replaceable) dependencies.
+- **Flexible**: provided values are reused within a given scope, and providers and consumers support a variety of syntaxes (asynchronous/synchronous, function/generator) to make provisioning fun again.
 
 aiodine is **async-first** in the sense that:
 
