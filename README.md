@@ -92,7 +92,9 @@ async def main():
 
 ### Providers consuming other providers
 
-Providers can also consume other providers. To do so, providers need to be _frozen_ so that the dependency graph can be correctly resolved:
+Providers are modular in the sense that they can themselves consume other providers.
+
+For this to work however, providers need to be _frozen_ first. This ensures that the dependency graph can be correctly resolved regardless of the declaration order.
 
 ```python
 import aiodine
@@ -108,7 +110,9 @@ async def send_email(email):
 aiodine.freeze()  # <- Ensures that `send_email` has resolved `email`.
 ```
 
-A context manager is also available:
+It is safe to call `.freeze()` multiple times.
+
+A context manager syntax is also available:
 
 ```python
 import aiodine
@@ -123,35 +127,30 @@ with aiodine.exit_freeze():
         print(f"Sending email to {email}…")
 ```
 
-Note: thanks to this, providers can be declared in any order.
-
 ### Generator providers
 
-Generator providers can be used to perform cleanup operations after a provider has gone out of scope.
+Generator providers can be used to perform cleanup (finalization) operations after a provider has gone out of scope.
 
 ```python
 import os
 import aiodine
 
 @aiodine.provider
-async def testing():
-    initial = os.getenv("APP_ENV")
-    os.environ["APP_ENV"] = "TESTING"
+async def complex_resource():
+    print("setting up complex resource…")
     try:
-        yield
+        yield "complex"
     finally:
-        os.environ.pop("APP_ENV")
-        if initial is not None:
-            os.environ["APP_ENV"] = initial
+        print("cleaning up complex resource…")
 ```
 
-**Note**: session generator providers will only be cleaned up if using them in the context of a session. See [Sessions](#sessions) for details.
+> **Tip**: synchronous generator providers are also supported.
 
-> **Tip**: synchronous generator providers are also supported!
+> **Note**: session-scoped generator providers will only be cleaned up if using them in the context of a session. See [Sessions](#sessions) for details.
 
 ### Lazy async providers
 
-When the provider function is asynchronous, its return value is awaited _before_ being injected into the consumer. In other words, providers are **eager** by default.
+When the provider function is asynchronous, its return value is awaited _before_ being injected into the consumer. In other words, async providers are **eager** by default.
 
 You can mark a provider as **lazy** in order to defer awaiting the provided value to the consumer. This is useful when the provider needs to be conditionally evaluated.
 
@@ -173,9 +172,9 @@ async def compute(expensive_computation, cache=None):
 
 ### Factory providers
 
-Instead of returning a value, a factory provider returns a _function_. This allows to build providers that can be reused for a variety of inputs.
+Instead of returning a scalar value, factory providers return a _function_. Factory providers are useful to implement reusable providers that accept a variety of inputs.
 
-This is a _design pattern_ more than anything else. In fact, there's no extra code in aiodine to support this feature.
+> This is a _design pattern_ more than anything else. In fact, there's no extra code in aiodine to support this feature.
 
 The following example defines a factory provider for a (simulated) database query:
 
@@ -197,7 +196,7 @@ async def get_note(notes):
             # TODO: fetch from a database instead?
             return next(note for note in notes if note["id"] == pk)
         except StopIteration:
-            raise HTTPError(404, detail=f"Note with ID {pk} does not exist.")
+            raise ValueError(f"Note with ID {pk} does not exist.")
 
     return _get_note
 ```
@@ -210,9 +209,7 @@ async def show_note(pk: int, get_note):
     print(await get_note(pk))
 ```
 
-**Tip**: you can combine factory providers with [generator providers](#generator-providers) to cleanup any resources the factory needs to use.
-
-Here's an example that provides temporary files and removes them on cleanup:
+**Tip**: you can combine factory providers with [generator providers](#generator-providers) to cleanup any resources the factory needs to use. Here's an example that provides temporary files and removes them on cleanup:
 
 ```python
 import os
@@ -233,36 +230,11 @@ def tmpfile():
         os.remove(path)
 ```
 
-### Sessions
-
-A **session** is the context in which _session providers_ live.
-
-More specifically, session providers (resp. generator session providers) are instanciated (resp. setup) when entering a session, and destroyed (resp. cleaned up) when exiting the session.
-
-To enter a session, use:
-
-```python
-await aiodine.enter_session()
-```
-
-To exit it:
-
-```python
-await aiodine.exit_session()
-```
-
-An async context manager syntax is also available:
-
-```python
-async with aiodine.session():
-    ...
-```
-
 ### Using providers without declaring them as parameters
 
-If a consumer needs to use a provider but not its return value, you use the `@useprovider` decorator and skip declaring it as a parameter.
+Sometimes, a consumer needs to use a provider but doesn't care about the value it returns. In these situations, you can use the `@useprovider` decorator and skip declaring it as a parameter.
 
-This decorator accepts a variable number of providers, given either by name or by reference.
+> **Tip**: the `@useprovider` decorator accepts a variable number of providers, which can be given by name or by reference.
 
 ```python
 import os
@@ -302,12 +274,38 @@ async def logdatetime():
     print(datetime.now())
 ```
 
+### Sessions
+
+A **session** is the context in which _session providers_ live.
+
+More specifically, session providers (resp. generator session providers) are instanciated (resp. setup) when entering a session, and destroyed (resp. cleaned up) when exiting the session.
+
+To enter a session, use:
+
+```python
+await aiodine.enter_session()
+```
+
+To exit it:
+
+```python
+await aiodine.exit_session()
+```
+
+An async context manager syntax is also available:
+
+```python
+async with aiodine.session():
+    ...
+```
+
 ## FAQ
 
 ### Why "aiodine"?
 
-aiodine contains _aio_ as in _asyncio_, and _di_ as in [Dependency Injection][di] The last two letters are only there to make this library's name pronounce like _iodine_, the chemical element.
+aiodine contains "aio" as in [asyncio], and "di" as in [Dependency Injection][di]. The last two letters end up making aiodine pronounce like _iodine_, the chemical element.
 
+[asyncio]: https://docs.python.org/3/library/asyncio.html
 [di]: https://en.wikipedia.org/wiki/Dependency_injection
 
 ## Changelog
@@ -317,5 +315,3 @@ See [CHANGELOG.md](https://github.com/bocadilloproject/aiodine/blob/master/CHANG
 ## License
 
 MIT
-
-[bocadillo]: https://github.com/bocadilloproject/bocadillo
