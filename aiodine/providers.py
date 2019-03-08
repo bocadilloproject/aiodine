@@ -24,7 +24,7 @@ from .compat import (
 from .datatypes import CoroutineFunction
 from .exceptions import ProviderDeclarationError
 
-if TYPE_CHECKING:
+if TYPE_CHECKING:  # pragma: no cover
     from .store import Store
 
 

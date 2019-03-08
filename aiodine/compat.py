@@ -14,7 +14,7 @@ if sys.version_info < (3, 7):
         ContextVar,
         Token,
     )
-else:
+else:  # pragma: no cover
     from contextvars import ContextVar, Token  # pylint: disable=unused-import
 
 
