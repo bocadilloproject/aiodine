@@ -13,6 +13,7 @@ from .exceptions import (
     UnknownScope,
 )
 from .providers import Provider, SessionProvider
+from .generic import ContextProvider
 
 PositionalProviders = List[Tuple[str, Provider]]
 KeywordProviders = Dict[str, Provider]
@@ -229,6 +230,9 @@ class Store:
             return func
 
         return decorate
+
+    def create_context_provider(self, *args, **kwargs):
+        return ContextProvider(self, *args, **kwargs)
 
     def freeze(self):
         """Resolve providers consumed by each provider."""
