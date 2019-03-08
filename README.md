@@ -370,7 +370,7 @@ def alice(order: Order):
 
 Let's reflect on this for a second. Noticed how the waiter holds only _one_ reference to an `Order`? This means the code works fine as long as only _one_ customer is served at a time. But what if another custom, say `bob`, comes along while `alice` is pondering? The waiter would modify or delete `alice`'s order before giving a new one to `bob`.
 
-With context providers, we transparently turn the waiter's `order` into a [context variable](https://docs.python.org/3/library/contextvars.html#context-variables) that is local to the context of each customer.
+With context providers, we transparently turn the waiter's `order` into a [context variable](https://docs.python.org/3/library/contextvars.html#context-variables) (a.k.a. `ContextVar`) that is local to the context of each customer.
 
 Here's how the code now looks like:
 
