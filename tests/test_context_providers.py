@@ -1,3 +1,5 @@
+from asyncio import sleep, gather
+
 import pytest
 from aiodine import Store
 
@@ -42,3 +44,24 @@ async def test_multiple_providers(store: Store):
         assert await get_them() == ("alice", "Slim Fox")
 
     assert await get_them() == (None, None)
+
+
+async def test_multi_client(store: Store):
+    provider = store.create_context_provider("name")
+
+    @store.consumer
+    async def get_name(name):
+        return name
+
+    async def client1():
+        with provider.assign(name="alice"):
+            await sleep(0.01)
+            # Would get "bob" if multiple clients were not supported.
+            assert await get_name() == "alice"
+
+    async def client2():
+        await sleep(0.005)
+        with provider.assign(name="bob"):
+            await sleep(0.01)
+
+    await gather(client1(), client2())
