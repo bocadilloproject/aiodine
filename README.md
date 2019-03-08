@@ -310,7 +310,9 @@ async with aiodine.session():
 
 ### Context providers
 
-Context providers were introduced to solve the problem of injecting values that are only defined within a given context (in the sense of asyncio contexts).
+Context providers were introduced to solve the problem of injecting values that are not defined at the time of defining the provider, but will be when entering some kind of _context_.
+
+This may be abstract, so let's consider an example before showing their usage.
 
 #### Example
 
