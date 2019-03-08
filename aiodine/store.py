@@ -12,8 +12,7 @@ from .exceptions import (
     RecursiveProviderError,
     UnknownScope,
 )
-from .providers import Provider, SessionProvider
-from .generic import ContextProvider
+from .providers import Provider, SessionProvider, ContextProvider
 
 PositionalProviders = List[Tuple[str, Provider]]
 KeywordProviders = Dict[str, Provider]
