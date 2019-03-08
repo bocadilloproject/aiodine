@@ -13,10 +13,14 @@ from typing import (
     Union,
 )
 
-from contextvars import ContextVar, Token
-
 from . import scopes
-from .compat import AsyncExitStack, wrap_async, wrap_generator_async
+from .compat import (
+    AsyncExitStack,
+    wrap_async,
+    wrap_generator_async,
+    ContextVar,
+    Token,
+)
 from .datatypes import CoroutineFunction
 from .exceptions import ProviderDeclarationError
 
