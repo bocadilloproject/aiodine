@@ -19,6 +19,9 @@ assignees: ''
 **Material**
 <!-- If applicable, add screenshots or tracebacks to help explain your problem. -->
 
+**Possible solutions**
+<!-- Any ideas you may have about what causes this bug and how to fix it. -->
+
 **Desktop (please complete the following information):**
  - OS:
 - Python version:
