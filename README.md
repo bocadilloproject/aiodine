@@ -314,9 +314,13 @@ Context providers were introduced to solve the problem of injecting values that 
 
 #### Example
 
-Consider a waiter that fulfills to orders submitted by customers. Each customer is given with an `Order` object which they can `.write()` their desired items to. This means that the waiter needs to _provide_ an `Order` object to each customer, and then execute the order, and mark it as done.
+Consider a waiter who executes orders submitted by customers. Each customer is given an `Order` object which they can `.write()` their desired items to.
 
-Here's what the code simulating this situation on the waiter's side may look like:
+In aiodine terminilogy, the waiter is a _provider_ for the order, and the customer is a _consumer_.
+
+Under normal operation, the waiter needs to listen to new customers, create a new `Order` object, provide it to the customer, and execute the order as written by the customer, and destroy the executed order.
+
+Here's what code simulating this situation on the waiter's side may look like:
 
 ```python
 from asyncio import Queue
@@ -342,21 +346,20 @@ class Waiter:
     async def serve(self):
         while True:
             # Wait for the next customer to call the waiter…
-            customer = self.queue.get()
+            customer = await self.queue.get()
 
             # Hand them out an order.
             self._order = Order()
             await customer()
 
-            # Execute the order and mark it as done.
+            # Execute the order and destroy it.
             self.execute(self._order)
-            self.queue.task_done()
             self._order = None
 ```
 
-Customers can write anything on the order they're given. More importantly, they'll probably take some time to think about what they are going to order.
+It's important to know that customers can do _anything_ with the order. In particular, they'll probably take some time to think about what they are going to order. In the meantime, the server will be listening to other customer calls.
 
-In code, this could translate to:
+An example customer's code may look like this:
 
 ```python
 from asyncio import sleep
@@ -368,11 +371,15 @@ def alice(order: Order):
     order.write("Pizza Margheritta")
 ```
 
-Let's reflect on this for a second. Noticed how the waiter holds only _one_ reference to an `Order`? This means the code works fine as long as only _one_ customer is served at a time. But what if another custom, say `bob`, comes along while `alice` is pondering? The waiter would modify or delete `alice`'s order before giving a new one to `bob`.
+Let's reflect on this for a second. Have you noticed that the waiter holds only _one_ reference to an `Order`? This means that the code works fine as long as only _one_ customer is served at a time.
 
-With context providers, we transparently turn the waiter's `order` into a [context variable](https://docs.python.org/3/library/contextvars.html#context-variables) (a.k.a. `ContextVar`) that is local to the context of each customer.
+But what if another customer, say `bob`, comes along while `alice` is thinking about what she'll order? The waiter will simply _forget_ about `alice`'s order, and end up executing `bob`'s order twice. In short: we'll encounter a **race condition**.
 
-Here's how the code now looks like:
+By using a context provider, we transparently turn the waiter's `order` into a [context variable][contextvars] (a.k.a. `ContextVar`) that is local to the context of each customer, solving the race condition.
+
+[contextvars]: https://docs.python.org/3/library/contextvars.html
+
+Here's how the code would then look like:
 
 ```python
 import aiodine
@@ -403,7 +410,7 @@ This situation may look trivial, but it can be found in many implementations of 
 
 #### Usage
 
-To create a context provider, use `aiodine.create_context_provider`. It accepts a variable number of arguments and returns a `ContextProvider`. Each argument is used as the name of a new `@provider` which provides the contents of a `ContextVar` object.
+To create a context provider, use `aiodine.create_context_provider()`. This method accepts a variable number of arguments and returns a `ContextProvider`. Each argument is used as the name of a new [`@provider`](#providers) which provides the contents of a [`ContextVar`][contextvars] object.
 
 ```python
 import aiodine
@@ -411,7 +418,7 @@ import aiodine
 provider = aiodine.create_context_provider("first_name", "last_name")
 ```
 
-To assign a value to one or more of the declared variables, use the `.assign()` method of the context provider:
+Each context variable contains `None` initially. This means that consumers wil receive `None` unless they are called within the context of an `.assign()` block:
 
 ```python
 with provider.assign(first_name="alice"):
@@ -419,8 +426,6 @@ with provider.assign(first_name="alice"):
     # if they consume the `first_name` provider.
     ...
 ```
-
-Note: contents of the context variables default to `None`. This means that consumers will receive `None` unless they are called within an `.assign()` block.
 
 ## FAQ
 
