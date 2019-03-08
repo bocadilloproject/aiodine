@@ -308,6 +308,120 @@ async with aiodine.session():
     ...
 ```
 
+### Context providers
+
+Context providers were introduced to solve the problem of injecting values that are only defined within a given context (in the sense of asyncio contexts).
+
+#### Example
+
+Consider a waiter that fulfills to orders submitted by customers. Each customer is given with an `Order` object which they can `.write()` their desired items to. This means that the waiter needs to _provide_ an `Order` object to each customer, and then execute the order, and mark it as done.
+
+Here's what the code simulating this situation on the waiter's side may look like:
+
+```python
+from asyncio import Queue
+
+import aiodine
+
+class Order:
+    def write(self, item: str):
+        ...
+
+class Waiter:
+    def __init__(self):
+        self._order = None
+        self.queue = Queue()
+
+        @aiodine.provider
+        def order():
+            return self._order
+
+    async def execute(self, order: Order):
+        ...
+
+    async def serve(self):
+        while True:
+            # Wait for the next customer to call the waiter…
+            customer = self.queue.get()
+
+            # Hand them out an order.
+            self._order = Order()
+            await customer()
+
+            # Execute the order and mark it as done.
+            self.execute(self._order)
+            self.queue.task_done()
+            self._order = None
+```
+
+Customers can write anything on the order they're given. More importantly, they'll probably take some time to think about what they are going to order.
+
+In code, this could translate to:
+
+```python
+from asyncio import sleep
+
+@aiodine.consumer
+def alice(order: Order):
+    # Pondering while looking at the menu…
+    await sleep(10)
+    order.write("Pizza Margheritta")
+```
+
+Let's reflect on this for a second. Noticed how the waiter holds only _one_ reference to an `Order`? This means the code works fine as long as only _one_ customer is served at a time. But what if another custom, say `bob`, comes along while `alice` is pondering? The waiter would modify or delete `alice`'s order before giving a new one to `bob`.
+
+With context providers, we transparently turn the waiter's `order` into a [context variable](https://docs.python.org/3/library/contextvars.html#context-variables) that is local to the context of each customer.
+
+Here's how the code now looks like:
+
+```python
+import aiodine
+
+class Waiter:
+    def __init__(self):
+        self.queue = Queue()
+        self.provider = aiodine.create_context_provider("order")
+
+    async def execute(self, order: Order):
+        ...
+
+    async def serve(self):
+        while True:
+            customer = self.queue.get()
+            order = Order()
+            with self.provider.assign(order=order):
+                await customer()
+                await self.execute(order)
+```
+
+Note:
+
+- Customers can use the `order` provider just like before. In fact, it was created when calling `.create_context_provider()`.
+- The `order` is now **context-local**, i.e. its value won't be if other customers come and make orders concurrently.
+
+This situation may look trivial, but it can be found in many implementations of a client/server architecture, including in web frameworks.
+
+#### Usage
+
+To create a context provider, use `aiodine.create_context_provider`. It accepts a variable number of arguments and returns a `ContextProvider`. Each argument is used as the name of a new `@provider` which provides the contents of a `ContextVar` object.
+
+```python
+import aiodine
+
+provider = aiodine.create_context_provider("first_name", "last_name")
+```
+
+To assign a value to one or more of the declared variables, use the `.assign()` method of the context provider:
+
+```python
+with provider.assign(first_name="alice"):
+    # Consumers called in this block will receive `"alice"`
+    # if they consume the `first_name` provider.
+    ...
+```
+
+Note: contents of the context variables default to `None`. This means that consumers will receive `None` unless they are called within an `.assign()` block.
+
 ## FAQ
 
 ### Why "aiodine"?
