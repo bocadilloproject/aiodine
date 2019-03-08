@@ -2,6 +2,7 @@
 
 from contextlib import contextmanager
 from typing import TYPE_CHECKING, Dict
+
 from contextvars import ContextVar
 
 if TYPE_CHECKING:
@@ -26,10 +27,11 @@ class ContextProvider:
 
     @contextmanager
     def assign(self, **kwargs):
+        tokens = {}
         for key, val in kwargs.items():
-            self._variables[key].set(val)
+            tokens[key] = self._variables[key].set(val)
         try:
             yield
         finally:
-            for key in kwargs:
-                self._variables[key].set(None)
+            for key, token in tokens.items():
+                self._variables[key].reset(token)
