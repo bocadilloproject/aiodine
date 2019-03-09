@@ -359,7 +359,7 @@ class Waiter:
         await customer()
 
         # Execute the order and destroy it.
-        self._execute(self._order)
+        await self._execute(self._order)
         self._order = None
 
     async def start(self):
@@ -407,7 +407,7 @@ class Waiter:
         order = Order()
         with self.provider.assign(order=order):
             await customer()
-            self._execute(order)
+            await self._execute(order)
 
     async def start(self):
         while True:
