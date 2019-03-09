@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [v1.1.0] - 2019-03-09
+
 ### Added
 
 - Context providers: provide context-local variables to consumers.
@@ -77,7 +79,8 @@ Initial release.
 - Nested providers: providers can consume other providers.
 - Use the `aiodine` module directly or create a separate `Store`.
 
-[unreleased]: https://github.com/bocadilloproject/aiodine/compare/v1.0.1...HEAD
+[unreleased]: https://github.com/bocadilloproject/aiodine/compare/v1.1.0...HEAD
+[v1.1.0]: https://github.com/bocadilloproject/aiodine/compare/v1.0.1...v1.1.0
 [v1.0.1]: https://github.com/bocadilloproject/aiodine/compare/v1.0.0...v1.0.1
 [v1.0.0]: https://github.com/bocadilloproject/aiodine/compare/v0.2.0...v1.0.0
 [v0.2.0]: https://github.com/bocadilloproject/aiodine/compare/v0.1.3...v0.2.0
