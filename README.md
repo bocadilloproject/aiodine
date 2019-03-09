@@ -317,11 +317,11 @@ This may sound abstract, so let's see an example before showing the usage of con
 
 Let's say we're in a restaurant. There, a waiter executes orders submitted by customers. Each customer is given an `Order` object which they can `.write()` their desired menu items to.
 
-In aiodine terminilogy, the waiter is a [provider](#providers) of the order, and the customer is a [consumer](#consumers).
+In aiodine terminilogy, the waiter is the [provider](#providers) of the order, and the customer is a [consumer](#consumers).
 
-During service, the waiter needs to listen to new customers, create a new `Order` object, provide it to the customer, and execute the order as written by the customer, and destroy the executed order.
+During service, the waiter needs to listen to new customers, create a new `Order` object, provide it to the customer, execute the order as written by the customer, and destroy the executed order.
 
-So, in this example, the **context** spans from when an order is created to when it is destroyed. It's important to note that it is specific to a given customer.
+So, in this example, the **context** spans from when an order is created to when it is destroyed, and is specific to a given customer.
 
 Here's what code simulating this situation on the waiter's side may look like:
 
@@ -368,9 +368,9 @@ class Waiter:
             await self._serve(customer)
 ```
 
-It's important to note that customers can do _anything_ with the order. In particular, they may take some time to think about what they are going to order. In the meantime, the server will be listening to other customer calls.
+It's important to note that customers can do _anything_ with the order. In particular, they may take some time to think about what they are going to order. In the meantime, the server will be listening to other customer calls. In this sense, this situation is an *asynchronous* one.
 
-An example customer's code may look like this:
+An example customer code may look like this:
 
 ```python
 from asyncio import sleep
@@ -400,16 +400,19 @@ class Waiter:
         self.queue = Queue()
         self.provider = aiodine.create_context_provider("order")
 
-    async def execute(self, order: Order):
+    async def _execute(self, order: Order):
         ...
 
-    async def serve(self):
+    async def _serve(self, customer):
+        order = Order()
+        with self.provider.assign(order=order):
+            await customer()
+            self._execute(order)
+
+    async def start(self):
         while True:
-            customer = self.queue.get()
-            order = Order()
-            with self.provider.assign(order=order):
-                await customer()
-                await self.execute(order)
+            customer = await self.queue.get()
+            await self._serve(customer)
 ```
 
 Note:
@@ -417,7 +420,7 @@ Note:
 - Customers can use the `order` provider just like before. In fact, it was created when calling `.create_context_provider()`.
 - The `order` is now **context-local**, i.e. its value won't be forgotten or scrambled if other customers come and make orders concurrently.
 
-This situation may look trivial, but it is likely to be found in client/server architectures, including in web frameworks.
+This situation may look trivial to some, but it is likely to be found in client/server architectures, including in web frameworks.
 
 #### Usage
 
