@@ -8,6 +8,7 @@ provider = _STORE.provider
 consumer = _STORE.consumer
 has_provider = _STORE.has_provider
 useprovider = _STORE.useprovider
+create_context_provider = _STORE.create_context_provider
 providers_module = _STORE.providers_module
 empty = _STORE.empty
 discover = _STORE.discover

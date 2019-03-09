@@ -75,7 +75,6 @@ Here's an example consumer:
 @aiodine.consumer
 async def show_friendly_message(hello):
     print(hello)
-
 ```
 
 All aiodine consumers are asynchronous, so you'll need to run them in an asynchronous context:
@@ -305,6 +304,140 @@ An async context manager syntax is also available:
 
 ```python
 async with aiodine.session():
+    ...
+```
+
+### Context providers
+
+Context providers were introduced to solve the problem of injecting **context-local resources**. These resources are typically undefined at the time of provider declaration, but become well-defined when entering some kind of **context**.
+
+This may sound abstract, so let's see an example before showing the usage of context providers.
+
+#### Example
+
+Let's say we're in a restaurant. There, a waiter executes orders submitted by customers. Each customer is given an `Order` object which they can `.write()` their desired menu items to.
+
+In aiodine terminilogy, the waiter is the [provider](#providers) of the order, and the customer is a [consumer](#consumers).
+
+During service, the waiter needs to listen to new customers, create a new `Order` object, provide it to the customer, execute the order as written by the customer, and destroy the executed order.
+
+So, in this example, the **context** spans from when an order is created to when it is destroyed, and is specific to a given customer.
+
+Here's what code simulating this situation on the waiter's side may look like:
+
+```python
+from asyncio import Queue
+
+import aiodine
+
+class Order:
+    def write(self, item: str):
+        ...
+
+class Waiter:
+    def __init__(self):
+        self._order = None
+        self.queue = Queue()
+
+        # Create an `order` provider for customers to use.
+        # NOTE: the actually provided value is not defined yet!
+        @aiodine.provider
+        def order():
+            return self._order
+
+    async def _execute(self, order: Order):
+        ...
+
+    async def _serve(self, customer):
+        # NOTE: we've now entered the *context* of serving
+        # a particular customer.
+
+        # Create a new order that the customer can
+        # via the `order` provider.
+        self._order = Order()
+
+        await customer()
+
+        # Execute the order and destroy it.
+        await self._execute(self._order)
+        self._order = None
+
+    async def start(self):
+        while True:
+            customer = await self.queue.get()
+            await self._serve(customer)
+```
+
+It's important to note that customers can do _anything_ with the order. In particular, they may take some time to think about what they are going to order. In the meantime, the server will be listening to other customer calls. In this sense, this situation is an *asynchronous* one.
+
+An example customer code may look like this:
+
+```python
+from asyncio import sleep
+
+@aiodine.consumer
+def alice(order: Order):
+    # Pondering while looking at the menu…
+    await sleep(10)
+    order.write("Pizza Margheritta")
+```
+
+Let's reflect on this for a second. Have you noticed that the waiter holds only _one_ reference to an `Order`? This means that the code works fine as long as only _one_ customer is served at a time.
+
+But what if another customer, say `bob`, comes along while `alice` is thinking about what she'll order? With the current implementation, the waiter will simply _forget_ about `alice`'s order, and end up executing `bob`'s order twice. In short: we'll encounter a **race condition**.
+
+By using a context provider, we transparently turn the waiter's `order` into a [context variable][contextvars] (a.k.a. `ContextVar`). It is local to the context of each customer, which solves the race condition.
+
+[contextvars]: https://docs.python.org/3/library/contextvars.html
+
+Here's how the code would then look like:
+
+```python
+import aiodine
+
+class Waiter:
+    def __init__(self):
+        self.queue = Queue()
+        self.provider = aiodine.create_context_provider("order")
+
+    async def _execute(self, order: Order):
+        ...
+
+    async def _serve(self, customer):
+        order = Order()
+        with self.provider.assign(order=order):
+            await customer()
+            await self._execute(order)
+
+    async def start(self):
+        while True:
+            customer = await self.queue.get()
+            await self._serve(customer)
+```
+
+Note:
+
+- Customers can use the `order` provider just like before. In fact, it was created when calling `.create_context_provider()`.
+- The `order` is now **context-local**, i.e. its value won't be forgotten or scrambled if other customers come and make orders concurrently.
+
+This situation may look trivial to some, but it is likely to be found in client/server architectures, including in web frameworks.
+
+#### Usage
+
+To create a context provider, use `aiodine.create_context_provider()`. This method accepts a variable number of arguments and returns a `ContextProvider`. Each argument is used as the name of a new [`@provider`](#providers) which provides the contents of a [`ContextVar`][contextvars] object.
+
+```python
+import aiodine
+
+provider = aiodine.create_context_provider("first_name", "last_name")
+```
+
+Each context variable contains `None` initially. This means that consumers will receive `None` — unless they are called within the context of an `.assign()` block:
+
+```python
+with provider.assign(first_name="alice"):
+    # Consumers called in this block will receive `"alice"`
+    # if they consume the `first_name` provider.
     ...
 ```
 

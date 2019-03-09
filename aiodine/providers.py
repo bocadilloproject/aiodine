@@ -1,12 +1,31 @@
-from functools import partial
-from contextlib import suppress
-from typing import Any, Awaitable, Callable, Optional, Union, AsyncGenerator
 import inspect
+from contextlib import contextmanager, suppress
+from functools import partial
+from typing import (
+    TYPE_CHECKING,
+    Any,
+    AsyncGenerator,
+    Awaitable,
+    Callable,
+    Dict,
+    List,
+    Optional,
+    Union,
+)
 
-from .datatypes import CoroutineFunction
-from .compat import wrap_async, wrap_generator_async, AsyncExitStack
-from .exceptions import ProviderDeclarationError
 from . import scopes
+from .compat import (
+    AsyncExitStack,
+    wrap_async,
+    wrap_generator_async,
+    ContextVar,
+    Token,
+)
+from .datatypes import CoroutineFunction
+from .exceptions import ProviderDeclarationError
+
+if TYPE_CHECKING:  # pragma: no cover
+    from .store import Store
 
 
 async def _terminate_agen(async_gen: AsyncGenerator):
@@ -128,3 +147,65 @@ class SessionProvider(Provider):
 
     def __call__(self, stack: AsyncExitStack) -> Awaitable:
         return self._get_instance()
+
+
+class ContextProvider:
+    """A provider of context-local values.
+
+    This provider is implemented using the ``contextvars`` module.
+
+    Parameters
+    ----------
+    store : Store
+    *names : str
+        The name of the variables to provide. For each variable, a
+        ``ContextVar`` is created and used by a new provider named
+        after the variable.
+    """
+
+    def __init__(self, store: "Store", *names: str):
+        self._store = store
+        self._variables: Dict[str, ContextVar] = {}
+
+        for name in names:
+            self._build_provider(name)
+
+    def _build_provider(self, name):
+        self._variables[name] = ContextVar(name, default=None)
+
+        async def provider():
+            return self._variables[name].get()
+
+        return self._store.provider(name=name)(provider)
+
+    def _set(self, **values: Any) -> List[Token]:
+        # Set new values for the given variables.
+        tokens = []
+        for name, val in values.items():
+            token = self._variables[name].set(val)
+            tokens.append(token)
+        return tokens
+
+    def _reset(self, *tokens: Token):
+        # Reset variables to their previous value using the given tokens.
+        for token in tokens:
+            self._variables[token.var.name].reset(token)
+
+    @contextmanager
+    def assign(self, **values: Any):
+        """Context manager to assign values to variables.
+
+        Only the variables for the current context are changed. Values for
+        other contexts are unaffected.
+
+        Variables are reset to their previous value on exit.
+
+        Parameters
+        ----------
+        **values : any
+        """
+        tokens = self._set(**values)
+        try:
+            yield
+        finally:
+            self._reset(*tokens)
