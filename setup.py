@@ -19,7 +19,7 @@ setuptools.setup(
     long_description_content_type="text/markdown",
     packages=setuptools.find_packages(),
     install_requires=[
-        "async_exit_stack==1.0.1;python_version<'3.7'",
+        "async_exit_stack;python_version<'3.7'",
         "aiocontextvars;python_version<'3.7'",
     ],
     python_requires=">=3.6",
