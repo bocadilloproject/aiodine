@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- A bug led `partial` consumer functions wrapping a coroutine function to not be called properly when awaiting the aiodine consumer. This has been fixed.
+
 ## [v1.1.0] - 2019-03-09
 
 ### Added

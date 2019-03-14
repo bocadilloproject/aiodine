@@ -107,3 +107,12 @@ async def test_if_wrapper_then_wrapped_must_be_async(store: Store):
 
     with pytest.raises(ConsumerDeclarationError):
         store.consumer(not_async)
+
+
+async def test_partial_of_async_function(store: Store):
+    async def consume():
+        return "OK"
+
+    consumer = store.consumer(partial(consume))
+
+    assert await consumer() == "OK"
