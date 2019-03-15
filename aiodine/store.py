@@ -9,6 +9,9 @@ from .consumers import Consumer
 from .datatypes import CoroutineFunction
 from .exceptions import RecursiveProviderError, UnknownScope
 from .providers import ContextProvider, Provider, SessionProvider
+from .sessions import Session
+
+DEFAULT_PROVIDER_MODULE = "providerconf"
 
 
 class Store:
@@ -24,7 +27,7 @@ class Store:
 
     def __init__(
         self,
-        providers_module="providerconf",
+        providers_module=DEFAULT_PROVIDER_MODULE,
         scope_aliases: Dict[str, str] = None,
         default_scope: str = scopes.FUNCTION,
     ):
@@ -62,7 +65,8 @@ class Store:
         with suppress(ImportError):
             self.discover(self.providers_module)
 
-    def discover(self, *module_paths: str):
+    @staticmethod
+    def discover(*module_paths: str):
         for module_path in module_paths:
             import_module(module_path)
 
@@ -140,7 +144,8 @@ class Store:
 
         return decorate
 
-    def get_used_providers(self, func: Callable):
+    @staticmethod
+    def get_used_providers(func: Callable):
         return getattr(func, "__useproviders__", [])
 
     # Context providers.
@@ -151,7 +156,6 @@ class Store:
     # Provider-in-providers freezing.
 
     def freeze(self):
-        """Resolve providers consumed by each provider."""
         for prov in self.providers.values():
             prov.func = self.consumer(prov.func)
 
@@ -171,18 +175,4 @@ class Store:
             await provider.exit_session()
 
     def session(self):
-        return _Session(self)
-
-
-# NOTE: can't use @asynccontextmanager from contextlib because it was
-# only added in Python 3.7.
-class _Session:
-    def __init__(self, store: Store):
-        self._store = store
-
-    async def __aenter__(self):
-        await self._store.enter_session()
-        return None
-
-    async def __aexit__(self, *args):
-        await self._store.exit_session()
+        return Session(self)
