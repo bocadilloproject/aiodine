@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- Providers can now be overridden regardless of their declaration order with respect to consumers that use them. Previously, a provider could only be overridden _before_ it was used in a consumer, which was of limited use.
+
 ## [v1.1.1] - 2019-03-14
 
 ### Fixed
