@@ -45,7 +45,7 @@ WRAPPER_SLOTS = ("__wrapped__", *WRAPPER_ASSIGNMENTS)
 
 class Consumer:
 
-    __slots__ = ("store", "pristine_func", "func", *WRAPPER_SLOTS)
+    __slots__ = ("store", "func", *WRAPPER_SLOTS)
 
     def __init__(
         self,
@@ -53,7 +53,6 @@ class Consumer:
         consumer_function: Union[partial, Callable, CoroutineFunction],
     ):
         self.store = store
-        self.pristine_func = consumer_function
 
         if isinstance(consumer_function, partial):
             if not inspect.iscoroutinefunction(consumer_function.func):
