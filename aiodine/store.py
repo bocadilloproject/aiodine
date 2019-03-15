@@ -38,6 +38,8 @@ class Store:
         self.default_scope = default_scope
         self.providers_module = providers_module
 
+    # Inspection.
+
     def empty(self):
         return not self.providers
 
@@ -47,6 +49,15 @@ class Store:
     def _get(self, name: str) -> Optional[Provider]:
         return self.providers.get(name)
 
+    def _get_providers(self, func: Callable) -> Dict[str, Provider]:
+        providers = {
+            param: self._get(param)
+            for param in inspect.signature(func).parameters
+        }
+        return dict(filter(lambda item: item[1] is not None, providers.items()))
+
+    # Provider discovery.
+
     def discover_default(self):
         with suppress(ImportError):
             self.discover(self.providers_module)
@@ -54,6 +65,8 @@ class Store:
     def discover(self, *module_paths: str):
         for module_path in module_paths:
             import_module(module_path)
+
+    # Provider registration.
 
     def provider(
         self,
@@ -101,22 +114,21 @@ class Store:
         if prov.autouse:
             self.autouse_providers[prov.name] = prov
 
+    # Provider recursion check.
+
     def _check_for_recursive_providers(self, name: str, func: Callable):
         for other_name, other in self._get_providers(func).items():
             if name in self._get_providers(other.func):
                 raise RecursiveProviderError(name, other_name)
 
-    def _get_providers(self, func: Callable) -> Dict[str, Provider]:
-        providers = {
-            param: self._get(param)
-            for param in inspect.signature(func).parameters
-        }
-        return dict(filter(lambda item: item[1] is not None, providers.items()))
+    # Consumers.
 
     def consumer(
         self, consumer_function: Union[partial, Callable, CoroutineFunction]
     ) -> Consumer:
         return Consumer(self, consumer_function)
+
+    # Used providers.
 
     def useprovider(self, *providers: Union[str, Provider]):
         def decorate(func):
@@ -131,8 +143,12 @@ class Store:
     def get_used_providers(self, func: Callable):
         return getattr(func, "__useproviders__", [])
 
+    # Context providers.
+
     def create_context_provider(self, *args, **kwargs):
         return ContextProvider(self, *args, **kwargs)
+
+    # Provider-in-providers freezing.
 
     def freeze(self):
         """Resolve providers consumed by each provider."""
@@ -143,6 +159,8 @@ class Store:
     def exit_freeze(self):
         yield
         self.freeze()
+
+    # Sessions.
 
     async def enter_session(self):
         for provider in self.session_providers.values():
