@@ -1,3 +1,4 @@
+import sys
 import inspect
 from contextlib import suppress
 from functools import partial, update_wrapper, WRAPPER_ASSIGNMENTS
@@ -39,8 +40,12 @@ class ResolvedProviders(NamedTuple):
         )
 
 
-WRAPPER_ASSIGNMENTS = tuple(a for a in WRAPPER_ASSIGNMENTS if a != "__module__")
-WRAPPER_SLOTS = ("__wrapped__", *WRAPPER_ASSIGNMENTS)
+WRAPPER_IGNORE = {"__module__"}
+if sys.version_info < (3, 7):
+    WRAPPER_IGNORE.add("__qualname__")
+
+WRAPPER_ASSIGNMENTS = set(WRAPPER_ASSIGNMENTS) - WRAPPER_IGNORE
+WRAPPER_SLOTS = {"__wrapped__", *WRAPPER_ASSIGNMENTS}
 
 
 class Consumer:
