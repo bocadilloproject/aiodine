@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [v1.2.0] - 2019-03-15
+
 ### Fixed
 
 - Providers can now be overridden regardless of their declaration order with respect to consumers that use them. Previously, a provider could only be overridden _before_ it was used in a consumer, which was of limited use.
@@ -89,7 +91,8 @@ Initial release.
 - Nested providers: providers can consume other providers.
 - Use the `aiodine` module directly or create a separate `Store`.
 
-[unreleased]: https://github.com/bocadilloproject/aiodine/compare/v1.1.1...HEAD
+[unreleased]: https://github.com/bocadilloproject/aiodine/compare/v1.2.0...HEAD
+[v1.2.0]: https://github.com/bocadilloproject/aiodine/compare/v1.1.1...v1.2.0
 [v1.1.1]: https://github.com/bocadilloproject/aiodine/compare/v1.1.0...v1.1.1
 [v1.1.0]: https://github.com/bocadilloproject/aiodine/compare/v1.0.1...v1.1.0
 [v1.0.1]: https://github.com/bocadilloproject/aiodine/compare/v1.0.0...v1.0.1
