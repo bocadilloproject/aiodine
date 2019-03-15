@@ -8,9 +8,11 @@ from aiodine.exceptions import ConsumerDeclarationError
 pytestmark = pytest.mark.asyncio
 
 
-async def test_consumer_returns_coroutine_function(store: Store):
+async def test_consumer_returns_coroutine_function_like(store: Store):
     func = store.consumer(lambda: "test")
-    assert inspect.iscoroutinefunction(func)
+    coro = func()
+    assert inspect.isawaitable(coro)
+    await coro
 
 
 async def test_if_no_provider_decalred_then_behaves_like_func(store: Store):
