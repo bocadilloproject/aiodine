@@ -118,3 +118,11 @@ async def test_partial_of_async_function(store: Store):
     consumer = store.consumer(partial(consume))
 
     assert await consumer() == "OK"
+
+
+async def test_keeps_order_of_arguments(store: Store):
+    @store.consumer
+    async def consume(a, b):
+        return a + b
+
+    assert await consume("a", "b") == "ab"

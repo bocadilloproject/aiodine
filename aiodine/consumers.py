@@ -116,7 +116,11 @@ class Consumer:
             for prov in providers.external:
                 await _get_value(prov)
 
-            args = list(args)
+            # Create a stack out of the positional arguments.
+            # Reverse it so we can `.pop()` out of it while
+            # keeping the final order of arguments.
+            args = list(reversed(args))
+
             injected_args = []
             for name, prov in providers.positional:
                 if prov is _NO_PROVIDER:

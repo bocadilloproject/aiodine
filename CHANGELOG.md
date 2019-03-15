@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- The order of arguments passed to a consumer is now preserved. It was previously reversed.
+
 ## [v1.2.0] - 2019-03-15
 
 ### Fixed
