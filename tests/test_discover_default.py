@@ -8,6 +8,8 @@ from aiodine import Store
 @pytest.fixture
 def providers_module(store: Store):
     class FixtureConf:
+        __spec__ = "spam"  # module-like
+
         @store.provider
         def example():  # pylint: disable=no-method-argument
             return "foo"

@@ -1,7 +1,8 @@
 import inspect
-from contextlib import contextmanager, suppress
+from contextlib import contextmanager
 from functools import partial
 from importlib import import_module
+from importlib.util import find_spec
 from typing import Callable, Dict, Optional, Union
 
 from . import scopes
@@ -62,8 +63,10 @@ class Store:
     # Provider discovery.
 
     def discover_default(self):
-        with suppress(ImportError):
-            self.discover(self.providers_module)
+        if find_spec(self.providers_module) is None:
+            # Module does not exist.
+            return
+        self.discover(self.providers_module)
 
     @staticmethod
     def discover(*module_paths: str):

@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- Previously, `ImportError` exceptions were silenced when discovering default providers (e.g. in `providerconf.py`). This lead to unexpected behavior when the providers module exists but raises an `ImportError` itself. We now correctly check whether the providers module _exists_ before importing it normally.
+
 ## [v1.2.1] - 2019-03-15
 
 ### Fixed
