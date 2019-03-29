@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- Add support for class-based consumers (must implement `.__call__()`).
+
 ## [v1.2.3] - 2019-03-29
 
 ### Added

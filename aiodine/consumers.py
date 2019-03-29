@@ -50,7 +50,7 @@ WRAPPER_SLOTS = {"__wrapped__", *WRAPPER_ASSIGNMENTS}
 
 class Consumer:
 
-    __slots__ = ("store", "func", *WRAPPER_SLOTS)
+    __slots__ = ("store", "func", "signature", *WRAPPER_SLOTS)
 
     def __init__(
         self,
@@ -64,14 +64,13 @@ class Consumer:
                 raise ConsumerDeclarationError(
                     "'partial' consumer functions must wrap an async function"
                 )
-        elif not inspect.iscoroutinefunction(consumer_function):
-            consumer_function = wrap_async(consumer_function)
+        else:
+            if not inspect.isfunction(consumer_function):
+                assert callable(consumer_function), "consumers must be callable"
+                consumer_function = consumer_function.__call__
 
-        assert (
-            isinstance(consumer_function, partial)
-            and inspect.iscoroutinefunction(consumer_function.func)
-            or inspect.iscoroutinefunction(consumer_function)
-        )
+            if not inspect.iscoroutinefunction(consumer_function):
+                consumer_function = wrap_async(consumer_function)
 
         self.func = consumer_function
         update_wrapper(

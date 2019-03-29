@@ -90,6 +90,28 @@ async def test_async_consumer(store: Store):
     assert await play() == "C#C#"
 
 
+@pytest.mark.parametrize("is_async", (True, False))
+async def test_class_based_consumer(store: Store, is_async: bool):
+    @store.provider
+    def pitch():
+        return "C#"
+
+    class Consumer:
+        if is_async:
+
+            async def __call__(self, pitch: str):
+                return 2 * pitch
+
+        else:
+
+            def __call__(self, pitch: str):
+                return 2 * pitch
+
+    consume = Consumer()
+    consume = store.consumer(consume)
+    assert await consume() == "C#C#"
+
+
 async def test_handle_keyword_only_parameters(store: Store):
     @store.provider
     async def pitch():
