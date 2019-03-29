@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [v1.2.4] - 2019-03-30
+
 ### Added
 
 - Add support for class-based consumers (must implement `.__call__()`).
@@ -113,7 +115,8 @@ Initial release.
 - Nested providers: providers can consume other providers.
 - Use the `aiodine` module directly or create a separate `Store`.
 
-[unreleased]: https://github.com/bocadilloproject/aiodine/compare/v1.2.3...HEAD
+[unreleased]: https://github.com/bocadilloproject/aiodine/compare/v1.2.4...HEAD
+[v1.2.4]: https://github.com/bocadilloproject/aiodine/compare/v1.2.3...v1.2.4
 [v1.2.3]: https://github.com/bocadilloproject/aiodine/compare/v1.2.2...v1.2.3
 [v1.2.2]: https://github.com/bocadilloproject/aiodine/compare/v1.2.1...v1.2.2
 [v1.2.1]: https://github.com/bocadilloproject/aiodine/compare/v1.2.0...v1.2.1
