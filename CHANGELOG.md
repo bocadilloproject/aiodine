@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- Add support for keyword-only parameters in consumers.
+
 ## [v1.2.2] - 2019-03-24
 
 ### Fixed

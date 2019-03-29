@@ -41,7 +41,7 @@ class ResolvedProviders(NamedTuple):
 
 
 WRAPPER_IGNORE = {"__module__"}
-if sys.version_info < (3, 7):
+if sys.version_info < (3, 7):  # pragma: no cover
     WRAPPER_IGNORE.add("__qualname__")
 
 WRAPPER_ASSIGNMENTS = set(WRAPPER_ASSIGNMENTS) - WRAPPER_IGNORE
@@ -87,11 +87,9 @@ class Consumer:
         ]
 
         for name, parameter in inspect.signature(self.func).parameters.items():
-            prov: Optional[Provider] = self.store.providers.get(name)
-
-            if prov is None:
-                positional.append((name, _NO_PROVIDER))
-                continue
+            prov: Optional[Provider] = self.store.providers.get(
+                name, _NO_PROVIDER
+            )
 
             if parameter.kind == inspect.Parameter.KEYWORD_ONLY:
                 keyword[name] = prov
@@ -123,22 +121,24 @@ class Consumer:
 
             injected_args = []
             for name, prov in providers.positional:
-                if prov is _NO_PROVIDER:
-                    # No provider exists for this argument. Get it from
-                    # `kwargs` in priority, and default to `args`.
-                    if name in kwargs:
-                        injected_args.append(kwargs.pop(name))
-                        continue
+                if name in kwargs:
+                    # Use values from keyword arguments in priority.
+                    injected_args.append(kwargs.pop(name))
+                    continue
+                elif prov is _NO_PROVIDER:
+                    # No provider exists. Use the next positional argument.
                     with suppress(IndexError):
                         injected_args.append(args.pop())
-                    continue
-                # A provider exists for this argument. Use it!
-                injected_args.append(await _get_value(prov))
+                else:
+                    # A provider exists for this argument. Use it!
+                    injected_args.append(await _get_value(prov))
 
-            injected_kwargs = {
-                name: await _get_value(prov)
-                for name, prov in providers.keyword.items()
-                if name not in kwargs
-            }
+            injected_kwargs = {}
+            for name, prov in providers.keyword.items():
+                if name in kwargs or prov is _NO_PROVIDER:
+                    with suppress(KeyError):
+                        injected_kwargs[name] = kwargs.pop(name)
+                else:
+                    injected_kwargs[name] = await _get_value(prov)
 
             return await self.func(*injected_args, **injected_kwargs)

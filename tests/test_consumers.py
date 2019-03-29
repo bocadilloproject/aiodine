@@ -96,10 +96,11 @@ async def test_handle_keyword_only_parameters(store: Store):
         return "C#"
 
     @store.consumer
-    async def play(*, pitch):
-        return 2 * pitch
+    async def play(*, pitch, octave):
+        return 2 * pitch + str(octave)
 
-    assert await play() == "C#C#"
+    assert await play(octave=2) == "C#C#2"
+    assert await play(pitch="D", octave=2) == "DD2"
 
 
 async def test_if_wrapper_then_wrapped_must_be_async(store: Store):
