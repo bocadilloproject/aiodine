@@ -112,6 +112,20 @@ async def test_class_based_consumer(store: Store, is_async: bool):
     assert await consume() == "C#C#"
 
 
+async def test_method_consumer(store: Store):
+    @store.provider
+    async def pitch():
+        return "C#"
+
+    class Piano:
+        async def play(self, pitch):
+            return 2 * pitch
+
+    piano = Piano()
+    play = store.consumer(piano.play)
+    assert await play() == "C#C#"
+
+
 async def test_handle_keyword_only_parameters(store: Store):
     @store.provider
     async def pitch():

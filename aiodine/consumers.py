@@ -65,7 +65,9 @@ class Consumer:
                     "'partial' consumer functions must wrap an async function"
                 )
         else:
-            if not inspect.isfunction(consumer_function):
+            if not inspect.isfunction(
+                consumer_function
+            ) and not inspect.ismethod(consumer_function):
                 assert callable(consumer_function), "consumers must be callable"
                 consumer_function = consumer_function.__call__
 
