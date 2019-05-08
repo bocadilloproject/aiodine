@@ -123,14 +123,15 @@ class SessionProvider(Provider):
         self._generator: Optional[AsyncGenerator] = None
 
     async def enter_session(self):
-        value: Union[Awaitable, AsyncGenerator] = self.func()
+        value = self.func()
+
+        if inspect.isawaitable(value):
+            value = await value
 
         if inspect.isasyncgen(value):
             agen = value
             value = await agen.asend(None)
             self._generator = agen
-        else:
-            value = await value
 
         self._instance = value
 

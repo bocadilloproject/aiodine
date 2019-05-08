@@ -1,7 +1,7 @@
-import sys
 import inspect
+import sys
 from contextlib import suppress
-from functools import partial, update_wrapper, WRAPPER_ASSIGNMENTS
+from functools import WRAPPER_ASSIGNMENTS, partial, update_wrapper
 from typing import (
     TYPE_CHECKING,
     Callable,
@@ -16,13 +16,13 @@ from typing import (
 from .compat import AsyncExitStack, wrap_async
 from .datatypes import CoroutineFunction
 from .exceptions import ConsumerDeclarationError
-from .providers import Provider
 
-if TYPE_CHECKING:
+if TYPE_CHECKING:  # pragma: no cover
     from .store import Store
+    from .providers import Provider
 
-PositionalProviders = List[Tuple[str, Provider]]
-KeywordProviders = Dict[str, Provider]
+PositionalProviders = List[Tuple[str, "Provider"]]
+KeywordProviders = Dict[str, "Provider"]
 
 # Sentinel for parameters that have no provider.
 _NO_PROVIDER = object()
@@ -32,12 +32,7 @@ class ResolvedProviders(NamedTuple):
 
     positional: PositionalProviders
     keyword: KeywordProviders
-    external: List[Provider]
-
-    def __bool__(self):
-        return (
-            bool(self.positional) or bool(self.keyword) or bool(self.external)
-        )
+    external: List["Provider"]
 
 
 WRAPPER_IGNORE = {"__module__"}
@@ -88,7 +83,7 @@ class Consumer:
         ]
 
         for name, parameter in inspect.signature(self.func).parameters.items():
-            prov: Optional[Provider] = self.store.providers.get(
+            prov: Optional["Provider"] = self.store.providers.get(
                 name, _NO_PROVIDER
             )
 
@@ -107,7 +102,7 @@ class Consumer:
 
         async with AsyncExitStack() as stack:
 
-            async def _get_value(prov: Provider):
+            async def _get_value(prov: "Provider"):
                 if prov.lazy:
                     return prov(stack)
                 return await prov(stack)
