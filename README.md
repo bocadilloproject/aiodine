@@ -67,7 +67,7 @@ By default, providers are function-scoped.
 
 ### Consumers
 
-Once a provider has been declared, it can be used by **consumers**. A consumer is built by decoratinga **consumer function** with `@aiodine.consumer`. A consumer can declare a provider as one of its parameters and aiodine will inject it at runtime.
+Once a provider has been declared, it can be used by **consumers**. A consumer is built by decorating a **consumer function** with `@aiodine.consumer`. A consumer can declare a provider as one of its parameters and aiodine will inject it at runtime.
 
 Here's an example consumer:
 
@@ -104,13 +104,13 @@ async def main():
 
 Providers are modular in the sense that they can themselves consume other providers.
 
-For this to work however, providers need to be _frozen_ first. This ensures that the dependency graph can be correctly resolved regardless of the declaration order.
+For this to work however, providers need to be **frozen** first. This ensures that the dependency graph is correctly resolved regardless of the declaration order.
 
 ```python
 import aiodine
 
 @aiodine.provider
-async def email():
+def email():
     return "user@example.net"
 
 @aiodine.provider
@@ -120,7 +120,7 @@ async def send_email(email):
 aiodine.freeze()  # <- Ensures that `send_email` has resolved `email`.
 ```
 
-It is safe to call `.freeze()` multiple times.
+**Note**: it is safe to call `.freeze()` multiple times.
 
 A context manager syntax is also available:
 
@@ -129,7 +129,7 @@ import aiodine
 
 with aiodine.exit_freeze():
     @aiodine.provider
-    async def email():
+    def email():
         return "user@example.net"
 
     @aiodine.provider
@@ -140,8 +140,6 @@ with aiodine.exit_freeze():
 ### Generator providers
 
 Generator providers can be used to perform cleanup (finalization) operations after a provider has gone out of scope.
-
-**Tip**: cleanup code is executed even if an exception occurred in the consumer, so there's no need to surround the `yield` statement with a `try/finally` block.
 
 ```python
 import os
@@ -154,11 +152,13 @@ async def complex_resource():
     print("cleaning up complex resource…")
 ```
 
-**Note**: session-scoped generator providers will only be cleaned up if using them in the context of a session. See [Sessions](#sessions) for details.
+**Tip**: cleanup code is executed even if an exception occurred in the consumer, so there's no need to surround the `yield` statement with a `try/finally` block.
+
+**Important**: session-scoped generator providers will only be cleaned up if using them in the context of a session. See [Sessions](#sessions) for details.
 
 ### Lazy async providers
 
-When the provider function is asynchronous, its return value is awaited _before_ being injected into the consumer. In other words, async providers are **eager** by default.
+Async providers are **eager** by default: their return value is awaited before being injected into the consumer.
 
 You can mark a provider as **lazy** in order to defer awaiting the provided value to the consumer. This is useful when the provider needs to be conditionally evaluated.
 
@@ -167,15 +167,15 @@ from asyncio import sleep
 import aiodine
 
 @aiodine.provider(lazy=True)
-async def expensive_computation():
+async def expensive_io_call():
     await sleep(10)
     return 42
 
 @aiodine.consumer
-async def compute(expensive_computation, cache=None):
+async def compute(expensive_io_call, cache=None):
     if cache:
         return cache
-    return await expensive_computation
+    return await expensive_io_call
 ```
 
 ### Factory providers
@@ -309,6 +309,8 @@ async with aiodine.session():
 
 ### Context providers
 
+> **WARNING**: this is an experimental feature.
+
 Context providers were introduced to solve the problem of injecting **context-local resources**. These resources are typically undefined at the time of provider declaration, but become well-defined when entering some kind of **context**.
 
 This may sound abstract, so let's see an example before showing the usage of context providers.
@@ -368,7 +370,7 @@ class Waiter:
             await self._serve(customer)
 ```
 
-It's important to note that customers can do _anything_ with the order. In particular, they may take some time to think about what they are going to order. In the meantime, the server will be listening to other customer calls. In this sense, this situation is an *asynchronous* one.
+It's important to note that customers can do _anything_ with the order. In particular, they may take some time to think about what they are going to order. In the meantime, the server will be listening to other customer calls. In this sense, this situation is an _asynchronous_ one.
 
 An example customer code may look like this:
 
