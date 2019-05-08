@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- Session-scoped async generator providers were not correctly handled: they returned the async generator instead of setting and cleaning it up. This has been fixed!
+
 ## [v1.2.5] - 2019-03-30
 
 ### Fixed
