@@ -3,13 +3,13 @@ import sys
 from functools import wraps
 from typing import AsyncGenerator, Awaitable, Callable, Generator
 
-try:
+try:  # pragma: no cover
     from contextlib import AsyncExitStack  # pylint: disable=unused-import
-except ImportError:
+except ImportError:  # pragma: no cover
     from async_exit_stack import AsyncExitStack
 
 
-if sys.version_info < (3, 7):
+if sys.version_info < (3, 7):  # pragma: no cover
     from aiocontextvars import (  # pylint: disable=unused-import, import-error
         ContextVar,
         Token,

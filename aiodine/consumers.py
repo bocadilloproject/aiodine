@@ -17,7 +17,7 @@ from .compat import AsyncExitStack, wrap_async
 from .datatypes import CoroutineFunction
 from .exceptions import ConsumerDeclarationError
 
-if TYPE_CHECKING:
+if TYPE_CHECKING:  # pragma: no cover
     from .store import Store
     from .providers import Provider
 
@@ -33,11 +33,6 @@ class ResolvedProviders(NamedTuple):
     positional: PositionalProviders
     keyword: KeywordProviders
     external: List["Provider"]
-
-    def __bool__(self):
-        return (
-            bool(self.positional) or bool(self.keyword) or bool(self.external)
-        )
 
 
 WRAPPER_IGNORE = {"__module__"}
