@@ -10,7 +10,7 @@ except ImportError:
 
 
 if sys.version_info < (3, 7):
-    from aiocontextvars import (  # pylint: disable=unused-import
+    from aiocontextvars import (  # pylint: disable=unused-import, import-error
         ContextVar,
         Token,
     )
@@ -26,7 +26,7 @@ def wrap_async(func: Callable) -> Callable[..., Awaitable]:
     return async_func
 
 
-def wrap_generator_async(gen: Generator) -> AsyncGenerator:
+def wrap_generator_async(gen: Generator) -> Callable[..., AsyncGenerator]:
     @wraps(gen)
     async def async_gen(*args, **kwargs):
         for item in gen(*args, **kwargs):
