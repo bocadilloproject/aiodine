@@ -1,15 +1,11 @@
 language: python
-
+dist: xenial
 python: "3.6"
-
 cache: pip
 
 jobs:
   include:
     - stage: test
-      language: python
-      cache: pip
-      python: "3.6"
       install:
         - pip install .
         - pip install -U pytest pytest-asyncio codecov pytest-cov
@@ -17,10 +13,6 @@ jobs:
       after_success: codecov
 
     - stage: test
-      if: branch != release/docs
-      language: python
-      sudo: required
-      dist: xenial
       python: "3.7"
       install:
         - pip install .
@@ -32,8 +24,18 @@ jobs:
       script: skip
       deploy:
         - provider: pypi
-          distributions: "sdist bdist_wheel"
-          username: $PYPI_USERNAME
-          password: $PYPI_PASSWORD
+          distributions: sdist bdist_wheel
+          username: "$PYPI_USERNAME"
+          password: "$PYPI_PASSWORD"
           on:
             tags: true
+
+    - stage: create github release
+      if: tag IS present
+      script: skip
+      deploy:
+        provider: releases
+        api_key:
+          secure: d8/OY/iH2FiEUHV0yfTAyWwnat6RJ2GfZfxjvG4N+9XA0XvMvp4WwHILkdLqOF1RWgZjSNEUPbhIFyEeoL82roguNsKRALhlWabNbw3nRh8ECItD01QZZMSW1MyXbZVQtJXJCg5g8NJTRbE8Gf6USK53utcoDi+X+vjVhaxT/loBBp2V8kk0ZwW7s0AeD85TekAYQGjx5KfLKFNxdjvQrsa2ncb6l5Ax/GEjhAW0QZpIqt+qRkMpZGu7507UVXjqLSfebRplZfyfeYHOIVmHIwicNi7TVOvMpUEJX3Wm4ioBkFZ5WttIhppecL61rWXxRwCLrUrWDiVQkQvIa7XUIKhHukBixCFH6cJyvTWnIp0k0UgADCkH8kd8kSKyDHlbtkmkXg/OT9B2Pc431vgMI2Ch1LeUiqKe/GsO+Wl8xbapce6nK0kE+PaM3GrGWCiPKWPvtc0jcbbGMt5/TOT7gNZn/fqQf7Tgaln3Fe17mBZ0XRQ4utLJAP33FPFHEz2uozE5A4Lpt51A4lN/rbfEJlYrYw7hSEc9n7Hu8FD3hGnsy+ONhCFZLn5Pstnsz9KcNbMn8xi+kGS7R+c45wSTTtybx9TJzxHdYiEho/kz5VNqEDe34u9SwbkMpvpPdzsRyzGVuX3Mmqku6IMc234/sLooJ6i4NMBeiqOwICj8Xds=
+        on:
+          repo: bocadilloproject/aiodine
