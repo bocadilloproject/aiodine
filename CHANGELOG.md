@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [v1.2.7] - 2019-06-19
+
 ### Fixed
 
 - Passing providers as strings to `@useprovider` is now lazy: providers will be resolved at runtime.
@@ -135,7 +137,8 @@ Initial release.
 - Nested providers: providers can consume other providers.
 - Use the `aiodine` module directly or create a separate `Store`.
 
-[unreleased]: https://github.com/bocadilloproject/aiodine/compare/v1.2.6...HEAD
+[unreleased]: https://github.com/bocadilloproject/aiodine/compare/v1.2.7...HEAD
+[v1.2.7]: https://github.com/bocadilloproject/aiodine/compare/v1.2.6...v1.2.7
 [v1.2.6]: https://github.com/bocadilloproject/aiodine/compare/v1.2.5...v1.2.6
 [v1.2.5]: https://github.com/bocadilloproject/aiodine/compare/v1.2.4...v1.2.5
 [v1.2.4]: https://github.com/bocadilloproject/aiodine/compare/v1.2.3...v1.2.4
