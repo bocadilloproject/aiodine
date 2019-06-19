@@ -23,3 +23,10 @@ class RecursiveProviderError(ProviderDeclarationError):
 
 class UnknownScope(AiodineException):
     """Raised when an unknown scope is used."""
+
+
+class ProviderDoesNotExist(AiodineException):
+    """Raised when using an unknown provider."""
+
+    def __init__(self, name: str):
+        super().__init__(f"provider {name} does not exist")

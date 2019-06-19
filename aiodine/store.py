@@ -3,16 +3,21 @@ from contextlib import contextmanager
 from functools import partial
 from importlib import import_module
 from importlib.util import find_spec
-from typing import Callable, Dict, Optional, Union
+from typing import Any, Callable, Dict, Optional, Union
 
 from . import scopes
 from .consumers import Consumer
 from .datatypes import CoroutineFunction
-from .exceptions import RecursiveProviderError, UnknownScope
+from .exceptions import (
+    RecursiveProviderError,
+    UnknownScope,
+    ProviderDoesNotExist,
+)
 from .providers import ContextProvider, Provider, SessionProvider
 from .sessions import Session
 
 DEFAULT_PROVIDER_MODULE = "providerconf"
+_MISSING = object()
 
 
 class Store:
@@ -50,12 +55,17 @@ class Store:
     def has_provider(self, name: str) -> bool:
         return name in self.providers
 
-    def _get(self, name: str) -> Optional[Provider]:
-        return self.providers.get(name)
+    def _get(self, name: str, *, default: Any = _MISSING) -> Optional[Provider]:
+        if default is not _MISSING:
+            return self.providers.get(name, default)
+        try:
+            return self.providers[name]
+        except KeyError:
+            raise ProviderDoesNotExist(name) from None
 
     def _get_providers(self, func: Callable) -> Dict[str, Provider]:
         providers = {
-            param: self._get(param)
+            param: self._get(param, default=None)
             for param in inspect.signature(func).parameters
         }
         return dict(filter(lambda item: item[1] is not None, providers.items()))
@@ -139,17 +149,17 @@ class Store:
 
     def useprovider(self, *providers: Union[str, Provider]):
         def decorate(func):
-            func.__useproviders__ = [
-                prov if isinstance(prov, Provider) else self._get(prov)
-                for prov in providers
-            ]
+            func.__useproviders__ = providers
             return func
 
         return decorate
 
-    @staticmethod
-    def get_used_providers(func: Callable):
-        return getattr(func, "__useproviders__", [])
+    def get_used_providers(self, func: Callable):
+        providers = getattr(func, "__useproviders__", [])
+        return [
+            prov if isinstance(prov, Provider) else self._get(prov)
+            for prov in providers
+        ]
 
     # Context providers.
 

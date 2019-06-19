@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- Passing providers as strings to `@useprovider` is now lazy: providers will be resolved at runtime.
+
+### Changed
+
+- Passing an unknown provider name to `@useprovider` now results in a `ProviderDoesNotExist` exception raised when calling the consumer.
+
 ## [v1.2.6] - 2019-05-08
 
 ### Fixed
