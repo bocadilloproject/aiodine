@@ -20,6 +20,7 @@ async def main(data: Result = depends(make_api_call)) -> None:
 
 
 def test_example(capsys: typing.Any) -> None:
-    asyncio.run(call_resolved(main))
+    loop = asyncio.get_event_loop()
+    loop.run_until_complete(call_resolved(main))
     captured = capsys.readouterr()
     assert captured.out.strip() == "Fetched: Result(message='Hello, world!')"

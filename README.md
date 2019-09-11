@@ -43,7 +43,8 @@ async def main(data: Result = depends(make_api_call)) -> None:
     print("Fetched:", data)
 
 
-asyncio.run(call_resolved(main))  # Fetched: Result(message='Hello, world!')
+loop = asyncio.get_event_loop()
+loop.run_until_complete(call_resolved(main))  # Fetched: Result(message='Hello, world!')
 ```
 
 ## Features
