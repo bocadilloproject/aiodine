@@ -1,0 +1,8 @@
+-e .
+
+# Development dependencies.
+bumpversion
+mypy
+pytest
+pytest-asyncio
+pytest-cov
