@@ -9,6 +9,10 @@
 
 [pypi-url]: https://pypi.org/project/aiodine/
 
+> **Note**: you are currently viewing the development branch for aiodine 2.0. For the documentation from the latest 1.x release, please see the [`latest`] branch.
+
+[`latest`]: https://github.com/bocadilloproject/aiodine/tree/latest
+
 aiodine provides async-first [dependency injection][di] in the style of [Pytest fixtures](https://docs.pytest.org/en/latest/fixture.html) for Python 3.6+.
 
 - [Installation](#installation)
@@ -19,8 +23,8 @@ aiodine provides async-first [dependency injection][di] in the style of [Pytest 
 
 ## Installation
 
-```
-pip install aiodine
+```bash
+pip install "aiodine==1.*"
 ```
 
 ## Concepts
