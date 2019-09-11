@@ -47,6 +47,16 @@ loop = asyncio.get_event_loop()
 loop.run_until_complete(call_resolved(main))  # Fetched: Result(message='Hello, world!')
 ```
 
+**Tip**: aiodine does not rely on asyncio directly — it can run on curio or trio too:
+
+```python
+import curio
+import trio
+
+curio.run(call_resolved, (main,))
+trio.run(call_resolved, main)
+```
+
 ## Features
 
 aiodine is:

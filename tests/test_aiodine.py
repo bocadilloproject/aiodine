@@ -1,14 +1,14 @@
-import asyncio
 import typing
 
 import pytest
+from anyio import sleep
 
 import aiodine
 
 
 async def io() -> None:
     """Simulate some kind of I/O call."""
-    await asyncio.sleep(1e-4)
+    await sleep(1e-4)
 
 
 async def get_hello() -> str:
@@ -32,34 +32,34 @@ async def say(message: str = aiodine.depends(get_message), times: int = 1) -> st
     return message * times
 
 
-@pytest.mark.asyncio
+@pytest.mark.anyio
 async def test_vanilla_usage() -> None:
     assert await get_hello() == "Hello"
     assert await get_world() == "world"
     assert await get_message("Hola", "mundo") == "Hola, mundo"
 
 
-@pytest.mark.asyncio
+@pytest.mark.anyio
 async def test_provide_parameter() -> None:
     assert await aiodine.call_resolved(say) == "Hello, world"
 
 
-@pytest.mark.asyncio
+@pytest.mark.anyio
 async def test_callee_uses_keyword_argument() -> None:
     assert await aiodine.call_resolved(say, times=2) == "Hello, worldHello, world"
 
 
-@pytest.mark.asyncio
+@pytest.mark.anyio
 async def test_callee_overrides_provided_positional_parameter() -> None:
     assert await aiodine.call_resolved(say, "Hi") == "Hi"
 
 
-@pytest.mark.asyncio
+@pytest.mark.anyio
 async def test_callee_overrides_provided_keyword_parameter() -> None:
     assert await aiodine.call_resolved(get_message, world="mundo") == "Hello, mundo"
 
 
-@pytest.mark.asyncio
+@pytest.mark.anyio
 async def test_sub_dependencies() -> None:
     async def moo() -> str:
         await io()
