@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- Contributing guidelines.
+
+### Changed
+
+- Recommend users to pin dependency to `==1.*`.
+
 ## [v1.2.7] - 2019-06-19
 
 ### Fixed
