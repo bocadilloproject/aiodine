@@ -1,22 +1,39 @@
-from .providers import Provider
-from .store import Store
-
-# pylint: disable=invalid-name
-_STORE = Store()
-
-provider = _STORE.provider
-consumer = _STORE.consumer
-has_provider = _STORE.has_provider
-useprovider = _STORE.useprovider
-create_context_provider = _STORE.create_context_provider
-providers_module = _STORE.providers_module
-empty = _STORE.empty
-discover = _STORE.discover
-discover_default = _STORE.discover_default
-freeze = _STORE.freeze
-exit_freeze = _STORE.exit_freeze
-session = _STORE.session
-enter_session = _STORE.enter_session
-exit_session = _STORE.exit_session
+import inspect
+import typing
 
 __version__ = "1.2.8"
+
+__all__ = ["depends", "call"]
+
+T = typing.TypeVar("T")
+DependableFunc = typing.Callable[..., typing.Awaitable[T]]
+
+
+def depends(func: DependableFunc[T]) -> T:
+    return typing.cast(T, Dependable(func))
+
+
+class Dependable(typing.Generic[T]):
+    def __init__(self, func: DependableFunc[T]):
+        self.func = func
+
+    def __repr__(self) -> str:
+        return f"{self.__class__.__name__}(func={self.func!r})"
+
+
+async def call(
+    func: DependableFunc[T], *args: typing.Any, **kwargs: typing.Any
+) -> typing.T:
+    signature = inspect.signature(func)
+
+    if not signature.parameters:
+        return await func(*args, **kwargs)
+
+    bound = signature.bind_partial(*args, **kwargs)
+    bound.apply_defaults()
+
+    for name, value in bound.arguments.items():
+        if isinstance(value, Dependable):
+            bound.arguments[name] = await call(value.func)
+
+    return await func(*bound.args, **bound.kwargs)
