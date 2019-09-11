@@ -41,22 +41,22 @@ async def test_vanilla_usage() -> None:
 
 @pytest.mark.asyncio
 async def test_provide_parameter() -> None:
-    assert await aiodine.call(say) == "Hello, world"
+    assert await aiodine.call_resolved(say) == "Hello, world"
 
 
 @pytest.mark.asyncio
 async def test_callee_uses_keyword_argument() -> None:
-    assert await aiodine.call(say, times=2) == "Hello, worldHello, world"
+    assert await aiodine.call_resolved(say, times=2) == "Hello, worldHello, world"
 
 
 @pytest.mark.asyncio
 async def test_callee_overrides_provided_positional_parameter() -> None:
-    assert await aiodine.call(say, "Hi") == "Hi"
+    assert await aiodine.call_resolved(say, "Hi") == "Hi"
 
 
 @pytest.mark.asyncio
 async def test_callee_overrides_provided_keyword_parameter() -> None:
-    assert await aiodine.call(get_message, world="mundo") == "Hello, mundo"
+    assert await aiodine.call_resolved(get_message, world="mundo") == "Hello, mundo"
 
 
 @pytest.mark.asyncio
@@ -68,4 +68,9 @@ async def test_sub_dependencies() -> None:
     async def cowsay(message: str = aiodine.depends(moo)) -> str:
         return f"Cow says: {message}"
 
-    assert await aiodine.call(cowsay) == "Cow says: moo"
+    assert await aiodine.call_resolved(cowsay) == "Cow says: moo"
+
+
+def test_dependable_repr() -> None:
+    dependable = aiodine.depends(...)  # type: ignore
+    assert repr(dependable) == "Dependable(func=Ellipsis)"  # type: ignore

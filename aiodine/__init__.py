@@ -21,7 +21,7 @@ class Dependable(typing.Generic[T]):
         return f"{self.__class__.__name__}(func={self.func!r})"
 
 
-async def call(
+async def call_resolved(
     func: DependableFunc[T], *args: typing.Any, **kwargs: typing.Any
 ) -> typing.T:
     signature = inspect.signature(func)
@@ -34,6 +34,6 @@ async def call(
 
     for name, value in bound.arguments.items():
         if isinstance(value, Dependable):
-            bound.arguments[name] = await call(value.func)
+            bound.arguments[name] = await call_resolved(value.func)
 
     return await func(*bound.args, **bound.kwargs)

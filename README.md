@@ -26,7 +26,7 @@ aiodine provides a simple but powerful async-first [dependency injection][di] me
 ```python
 import asyncio
 import typing
-from aiodine import depends, call
+from aiodine import depends, call_resolved
 
 
 class Result(typing.NamedTyple):
@@ -42,7 +42,7 @@ async def main(data: Result = depends(make_api_call)):
     print("Fetched:", data)
 
 
-asyncio.run(call(main))  # Fetched: Result(message='hello')
+asyncio.run(call_resolved(main))  # Fetched: Result(message='hello')
 ```
 
 ## Features
