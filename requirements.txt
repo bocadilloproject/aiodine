@@ -1,6 +1,7 @@
 -e .
 
 # Development dependencies.
+black
 bumpversion
 mypy
 pytest
