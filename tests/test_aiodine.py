@@ -1,3 +1,4 @@
+import contextlib
 import typing
 
 import pytest
@@ -73,4 +74,62 @@ async def test_sub_dependencies() -> None:
 
 def test_dependable_repr() -> None:
     dependable = aiodine.depends(...)  # type: ignore
-    assert repr(dependable) == "Dependable(func=Ellipsis)"  # type: ignore
+    assert repr(dependable) == "Dependable(func=Ellipsis)"
+
+
+@pytest.mark.anyio
+async def test_context_manager_dependable() -> None:
+    steps = []
+
+    @contextlib.asynccontextmanager
+    async def get_connection() -> typing.AsyncGenerator[str, None]:
+        await io()
+        steps.append(1)
+        yield "conn"
+        steps.append(3)
+
+    async def view(slug: str, conn: str = aiodine.depends(get_connection)) -> tuple:
+        await io()
+        steps.append(2)
+        return (slug, conn)
+
+    assert await aiodine.call_resolved(view, "test") == ("test", "conn")
+    assert steps == [1, 2, 3]
+
+
+@pytest.mark.anyio
+async def test_class_style_context_manager_dependable() -> None:
+    steps: typing.List[int] = []
+
+    class GetConnection:
+        async def __aenter__(self) -> str:
+            steps.append(1)
+            return "conn"
+
+        async def __aexit__(self, *args: typing.Any) -> None:
+            steps.append(3)
+
+    async def view(slug: str, conn: str = aiodine.depends(GetConnection)) -> tuple:
+        await io()
+        steps.append(2)
+        return (slug, conn)
+
+    assert await aiodine.call_resolved(view, "test") == ("test", "conn")
+    assert steps == [1, 2, 3]
+
+
+@pytest.mark.anyio
+async def test_plain_generator_dependable_not_supported() -> None:
+    async def get_value() -> typing.AsyncGenerator[str, None]:
+        yield "nope"
+
+    async def main(value: str = aiodine.depends(get_value)) -> None:  # type: ignore
+        pass
+
+    with pytest.raises(ValueError) as ctx:
+        await aiodine.call_resolved(main)
+
+    error = str(ctx.value)
+    assert error == (
+        "Expected coroutine or async context manager, got <class 'async_generator'>"
+    )
