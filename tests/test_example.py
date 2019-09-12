@@ -27,8 +27,10 @@ class Database:
 async def get_db() -> typing.AsyncIterator[Database]:
     db = Database(url="sqlite://:memory:")
     print("Connecting to database")
-    yield db
-    print("Releasing database connection")
+    try:
+        yield db
+    finally:
+        print("Releasing database connection")
 
 
 async def main(

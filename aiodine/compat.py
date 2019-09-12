@@ -21,3 +21,11 @@ def is_async_context_manager(obj: typing.Any) -> bool:
             and hasattr(obj, "__aexit__")
         )
     return isinstance(obj, AbstractAsyncContextManager)
+
+
+class asyncnullcontext:
+    async def __aenter__(self) -> None:
+        pass
+
+    async def __aexit__(self, *args: typing.Any) -> None:
+        pass

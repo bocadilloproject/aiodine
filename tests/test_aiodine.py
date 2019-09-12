@@ -133,3 +133,47 @@ async def test_plain_generator_dependable_not_supported() -> None:
     assert error == (
         "Expected coroutine or async context manager, got <class 'async_generator'>"
     )
+
+
+@pytest.mark.anyio
+async def test_context_manager_dependable_cleanup_on_error() -> None:
+    steps = []
+
+    @asynccontextmanager
+    async def get_connection() -> typing.AsyncIterator[str]:
+        await io()
+        steps.append(1)
+        try:
+            yield "conn"
+        finally:
+            steps.append(3)
+
+    async def view(conn: str = aiodine.depends(get_connection)) -> tuple:
+        steps.append(2)
+        raise RuntimeError
+
+    with pytest.raises(RuntimeError):
+        await aiodine.call_resolved(view)
+
+    assert steps == [1, 2, 3]
+
+
+@pytest.mark.anyio
+async def test_context_manager_dependable_no_cleanup_if_no_finally() -> None:
+    steps = []
+
+    @asynccontextmanager
+    async def get_connection() -> typing.AsyncIterator[str]:
+        await io()
+        steps.append(1)
+        yield "conn"
+        steps.append(3)
+
+    async def view(conn: str = aiodine.depends(get_connection)) -> tuple:
+        steps.append(2)
+        raise RuntimeError
+
+    with pytest.raises(RuntimeError):
+        await aiodine.call_resolved(view)
+
+    assert steps == [1, 2]

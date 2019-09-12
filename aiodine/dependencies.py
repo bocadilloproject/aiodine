@@ -2,7 +2,12 @@ import inspect
 import types
 import typing
 
-from .compat import AsyncExitStack, asynccontextmanager, is_async_context_manager
+from .compat import (
+    AsyncExitStack,
+    asynccontextmanager,
+    asyncnullcontext,
+    is_async_context_manager,
+)
 
 T = typing.TypeVar("T")
 DependableFunc = typing.Union[
@@ -49,17 +54,19 @@ async def call_resolved(
 
     raw = func(*bound.args, **bound.kwargs)
 
-    if isinstance(raw, types.CoroutineType):
-        result = await raw
-    elif is_async_context_manager(raw):
-        raw = typing.cast(typing.AsyncContextManager[T], raw)
-        result = await exit_stack.enter_async_context(raw)
-    else:
-        raise ValueError(
-            f"Expected coroutine or async context manager, got {type(raw)!r}"
-        )
+    ctx = (
+        exit_stack
+        if not is_sub_dependency
+        else typing.cast(typing.AsyncContextManager, asyncnullcontext())
+    )
 
-    if not is_sub_dependency:
-        await exit_stack.aclose()
-
-    return result
+    async with ctx:
+        if isinstance(raw, types.CoroutineType):
+            return await raw
+        elif is_async_context_manager(raw):
+            raw = typing.cast(typing.AsyncContextManager[T], raw)
+            return await exit_stack.enter_async_context(raw)
+        else:
+            raise ValueError(
+                f"Expected coroutine or async context manager, got {type(raw)!r}"
+            )
