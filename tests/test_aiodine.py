@@ -107,6 +107,20 @@ async def test_class_style_context_manager_dependable() -> None:
 
 
 @pytest.mark.anyio
+async def call_async_context_manager() -> None:
+    cleanup = False
+
+    @asynccontextmanager
+    async def value() -> typing.AsyncIterator[int]:
+        nonlocal cleanup
+        yield 42
+        cleanup = True
+
+    assert await aiodine.call_resolved(value) == 42
+    assert cleanup
+
+
+@pytest.mark.anyio
 async def test_plain_generator_dependable_not_supported() -> None:
     async def get_value() -> typing.AsyncIterator[str]:
         yield "nope"
@@ -180,7 +194,7 @@ async def test_sub_dependencies() -> None:
 
 
 @pytest.mark.anyio
-async def test_context_manager_sub_dependencies() -> None:
+async def test_context_manager_function_sub_dependency() -> None:
     cleanup = False
 
     async def moo() -> str:
@@ -193,8 +207,23 @@ async def test_context_manager_sub_dependencies() -> None:
         yield f"Cow says: {message}"
         cleanup = True
 
-    async def main(cowsay: str = aiodine.depends(cowsay)) -> str:
-        return cowsay
+    assert await aiodine.call_resolved(cowsay) == "Cow says: moo"
+    assert cleanup
 
-    assert await aiodine.call_resolved(main) == "Cow says: moo"
+
+@pytest.mark.anyio
+async def test_function_context_manager_sub_dependency() -> None:
+    cleanup = False
+
+    @asynccontextmanager
+    async def moo() -> typing.AsyncIterator[str]:
+        nonlocal cleanup
+        await io()
+        yield "moo"
+        cleanup = True
+
+    async def cowsay(message: str = aiodine.depends(moo)) -> str:
+        return f"Cow says: {message}"
+
+    assert await aiodine.call_resolved(cowsay) == "Cow says: moo"
     assert cleanup
