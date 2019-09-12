@@ -1,17 +1,22 @@
 language: python
 dist: xenial
-python: "3.6"
+python: 3.7
 cache: pip
 
 jobs:
   include:
+    - stage: check
+      script:
+        - black --check --target-version=py36 aiodine tests
+        - mypy
+
+    - stage: test
+      python: 3.6
+      script: pytest
+
     - stage: test
       script: pytest
       after_success: codecov
-
-    - stage: test
-      python: "3.7"
-      script: pytest
 
     - stage: deploy to pypi
       if: tag IS present
