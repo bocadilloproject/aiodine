@@ -35,10 +35,10 @@ async def call_resolved(
     **kwargs: typing.Any,
 ) -> T:
     if __exit_stack__ is None:
-        is_sub_dependency = False
+        is_root_call = True
         exit_stack = AsyncExitStack()
     else:
-        is_sub_dependency = True
+        is_root_call = False
         exit_stack = __exit_stack__
 
     signature = inspect.signature(func)
@@ -56,17 +56,18 @@ async def call_resolved(
 
     ctx = (
         exit_stack
-        if not is_sub_dependency
+        if is_root_call
         else typing.cast(typing.AsyncContextManager, asyncnullcontext())
     )
 
     async with ctx:
         if isinstance(raw, types.CoroutineType):
             return await raw
-        elif is_async_context_manager(raw):
+
+        if is_async_context_manager(raw):
             raw = typing.cast(typing.AsyncContextManager[T], raw)
             return await exit_stack.enter_async_context(raw)
-        else:
-            raise ValueError(
-                f"Expected coroutine or async context manager, got {type(raw)!r}"
-            )
+
+        raise ValueError(
+            f"Expected coroutine or async context manager, got {type(raw)!r}"
+        )
