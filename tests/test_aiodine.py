@@ -1,6 +1,7 @@
 import typing
 
 import pytest
+import sniffio
 from anyio import sleep
 
 import aiodine
@@ -30,6 +31,7 @@ async def get_message(
 
 
 async def say(message: str = aiodine.depends(get_message), times: int = 1) -> str:
+    await io()
     return message * times
 
 
@@ -67,57 +69,59 @@ def test_dependable_repr() -> None:
 
 @pytest.mark.anyio
 async def test_context_manager_dependable() -> None:
-    steps = []
+    cleaned_up = False
 
     @asynccontextmanager
     async def get_connection() -> typing.AsyncIterator[str]:
+        nonlocal cleaned_up
         await io()
-        steps.append(1)
         yield "conn"
-        steps.append(3)
+        cleaned_up = True
 
     async def view(slug: str, conn: str = aiodine.depends(get_connection)) -> tuple:
         await io()
-        steps.append(2)
         return (slug, conn)
 
     assert await aiodine.call_resolved(view, "test") == ("test", "conn")
-    assert steps == [1, 2, 3]
+    assert cleaned_up
 
 
 @pytest.mark.anyio
 async def test_class_style_context_manager_dependable() -> None:
-    steps: typing.List[int] = []
+    cleaned_up = False
 
     class GetConnection:
         async def __aenter__(self) -> str:
-            steps.append(1)
+            await io()
             return "conn"
 
         async def __aexit__(self, *args: typing.Any) -> None:
-            steps.append(3)
+            nonlocal cleaned_up
+            await io()
+            cleaned_up = True
 
     async def view(slug: str, conn: str = aiodine.depends(GetConnection)) -> tuple:
         await io()
-        steps.append(2)
         return (slug, conn)
 
     assert await aiodine.call_resolved(view, "test") == ("test", "conn")
-    assert steps == [1, 2, 3]
+    assert cleaned_up
 
 
 @pytest.mark.anyio
 async def call_async_context_manager() -> None:
-    cleanup = False
+    cleaned_up = False
 
     @asynccontextmanager
     async def value() -> typing.AsyncIterator[int]:
-        nonlocal cleanup
+        nonlocal cleaned_up
+        await io()
         yield 42
-        cleanup = True
+        await io()
+        cleaned_up = True
 
     assert await aiodine.call_resolved(value) == 42
-    assert cleanup
+    assert cleaned_up
 
 
 @pytest.mark.anyio
@@ -139,46 +143,52 @@ async def test_plain_generator_dependable_not_supported() -> None:
 
 @pytest.mark.anyio
 async def test_context_manager_dependable_cleanup_on_error() -> None:
-    steps = []
+    if sniffio.current_async_library() == "curio":
+        pytest.xfail(
+            "finally' clause with 'await' does not seem to "
+            "run correctly on curio (cleaed_up stays False)"
+        )
+
+    cleaned_up = False
 
     @asynccontextmanager
     async def get_connection() -> typing.AsyncIterator[str]:
+        nonlocal cleaned_up
         await io()
-        steps.append(1)
         try:
             yield "conn"
         finally:
-            steps.append(3)
+            await io()
+            cleaned_up = True
 
     async def view(conn: str = aiodine.depends(get_connection)) -> tuple:
-        steps.append(2)
         raise RuntimeError
 
     with pytest.raises(RuntimeError):
         await aiodine.call_resolved(view)
 
-    assert steps == [1, 2, 3]
+    assert cleaned_up
 
 
 @pytest.mark.anyio
 async def test_context_manager_dependable_no_cleanup_if_no_finally() -> None:
-    steps = []
+    cleaned_up = False
 
     @asynccontextmanager
     async def get_connection() -> typing.AsyncIterator[str]:
+        nonlocal cleaned_up
         await io()
-        steps.append(1)
         yield "conn"
-        steps.append(3)
+        await io()
+        cleaned_up = True
 
     async def view(conn: str = aiodine.depends(get_connection)) -> tuple:
-        steps.append(2)
         raise RuntimeError
 
     with pytest.raises(RuntimeError):
         await aiodine.call_resolved(view)
 
-    assert steps == [1, 2]
+    assert not cleaned_up
 
 
 @pytest.mark.anyio
@@ -195,7 +205,7 @@ async def test_sub_dependencies() -> None:
 
 @pytest.mark.anyio
 async def test_context_manager_function_sub_dependency() -> None:
-    cleanup = False
+    cleaned_up = False
 
     async def moo() -> str:
         await io()
@@ -203,27 +213,30 @@ async def test_context_manager_function_sub_dependency() -> None:
 
     @asynccontextmanager
     async def cowsay(message: str = aiodine.depends(moo)) -> typing.AsyncIterator[str]:
-        nonlocal cleanup
+        nonlocal cleaned_up
+        await io()
         yield f"Cow says: {message}"
-        cleanup = True
+        await io()
+        cleaned_up = True
 
     assert await aiodine.call_resolved(cowsay) == "Cow says: moo"
-    assert cleanup
+    assert cleaned_up
 
 
 @pytest.mark.anyio
 async def test_function_context_manager_sub_dependency() -> None:
-    cleanup = False
+    cleaned_up = False
 
     @asynccontextmanager
     async def moo() -> typing.AsyncIterator[str]:
-        nonlocal cleanup
+        nonlocal cleaned_up
         await io()
         yield "moo"
-        cleanup = True
+        await io()
+        cleaned_up = True
 
     async def cowsay(message: str = aiodine.depends(moo)) -> str:
         return f"Cow says: {message}"
 
     assert await aiodine.call_resolved(cowsay) == "Cow says: moo"
-    assert cleanup
+    assert cleaned_up
