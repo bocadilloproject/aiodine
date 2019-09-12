@@ -9,6 +9,7 @@ jobs:
       script:
         - black --check --target-version=py36 aiodine tests
         - mypy
+        - pytest tests/typechecks
 
     - stage: test
       python: 3.6

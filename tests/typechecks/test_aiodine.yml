@@ -1,0 +1,47 @@
+# Tests for cases when type hints are invalid.
+# (Valid cases are already covered by running mypy on test scripts.)
+
+- case: parameter_annotation_mismatch
+  main: |
+    import typing
+    import aiodine
+    from aiodine.compat import asynccontextmanager
+
+    @asynccontextmanager
+    async def get_value() -> typing.AsyncGenerator[str, None]:
+      yield "value"
+
+    async def main(value: int = aiodine.depends(get_value)) -> None:
+      pass
+  out: |
+    main:9: error: Incompatible default for argument "value" (default has type "str", argument has type "int")
+
+- case: dependable_annotation_mismatch
+  main: |
+    import typing
+    import aiodine
+    from aiodine.compat import asynccontextmanager
+
+    @asynccontextmanager
+    async def get_value() -> typing.AsyncIterator[int]:
+      yield "value"
+
+    async def main(value: str = aiodine.depends(get_value)) -> None:
+      pass
+
+  out: |
+    main:7: error: Incompatible types in "yield" (actual type "str", expected type "int")
+    main:9: error: Incompatible default for argument "value" (default has type "int", argument has type "str")
+
+- case: plain_generator_dependable
+  main: |
+    import typing
+    import aiodine
+
+    async def get_value() -> typing.AsyncIterator[str]:
+      yield "nope"
+
+    async def main(value: str = aiodine.depends(get_value)) -> None:
+      pass
+  out: |
+    main:7: error: Argument 1 to "depends" has incompatible type "Callable[[], AsyncIterator[str]]"; expected "Union[Callable[..., Awaitable[<nothing>]], Callable[..., AsyncContextManager[<nothing>]]]"
