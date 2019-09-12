@@ -75,7 +75,7 @@ Output:
 
 ```console
 Connecting to database
-Fetched: Result(message='Hello, world!')
+Fetched: APIResult(message='Hello, world!')
 Ready to fetch rows in: sqlite://:memory:
 Releasing database connection
 ```
