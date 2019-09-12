@@ -60,18 +60,6 @@ async def test_callee_overrides_provided_keyword_parameter() -> None:
     assert await aiodine.call_resolved(get_message, world="mundo") == "Hello, mundo"
 
 
-@pytest.mark.anyio
-async def test_sub_dependencies() -> None:
-    async def moo() -> str:
-        await io()
-        return "moo"
-
-    async def cowsay(message: str = aiodine.depends(moo)) -> str:
-        return f"Cow says: {message}"
-
-    assert await aiodine.call_resolved(cowsay) == "Cow says: moo"
-
-
 def test_dependable_repr() -> None:
     dependable = aiodine.depends(...)  # type: ignore
     assert repr(dependable) == "Dependable(func=Ellipsis)"
@@ -177,3 +165,36 @@ async def test_context_manager_dependable_no_cleanup_if_no_finally() -> None:
         await aiodine.call_resolved(view)
 
     assert steps == [1, 2]
+
+
+@pytest.mark.anyio
+async def test_sub_dependencies() -> None:
+    async def moo() -> str:
+        await io()
+        return "moo"
+
+    async def cowsay(message: str = aiodine.depends(moo)) -> str:
+        return f"Cow says: {message}"
+
+    assert await aiodine.call_resolved(cowsay) == "Cow says: moo"
+
+
+@pytest.mark.anyio
+async def test_context_manager_sub_dependencies() -> None:
+    cleanup = False
+
+    async def moo() -> str:
+        await io()
+        return "moo"
+
+    @asynccontextmanager
+    async def cowsay(message: str = aiodine.depends(moo)) -> typing.AsyncIterator[str]:
+        nonlocal cleanup
+        yield f"Cow says: {message}"
+        cleanup = True
+
+    async def main(cowsay: str = aiodine.depends(cowsay)) -> str:
+        return cowsay
+
+    assert await aiodine.call_resolved(main) == "Cow says: moo"
+    assert cleanup
