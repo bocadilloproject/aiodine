@@ -82,7 +82,7 @@ async def test_context_manager_dependable() -> None:
     steps = []
 
     @asynccontextmanager
-    async def get_connection() -> typing.AsyncGenerator[str, None]:
+    async def get_connection() -> typing.AsyncIterator[str]:
         await io()
         steps.append(1)
         yield "conn"
@@ -120,7 +120,7 @@ async def test_class_style_context_manager_dependable() -> None:
 
 @pytest.mark.anyio
 async def test_plain_generator_dependable_not_supported() -> None:
-    async def get_value() -> typing.AsyncGenerator[str, None]:
+    async def get_value() -> typing.AsyncIterator[str]:
         yield "nope"
 
     async def main(value: str = aiodine.depends(get_value)) -> None:  # type: ignore

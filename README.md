@@ -29,22 +29,53 @@ import typing
 
 from aiodine import call_resolved, depends
 
+# On 3.7+, you can use 'from contextlib import asynccontextmanager' directly.
+from aiodine.compat import asynccontextmanager
 
-class Result(typing.NamedTuple):
+
+class APIResult(typing.NamedTuple):
     message: str
 
 
-async def make_api_call() -> Result:
+# Simple function-based dependable that returns a value.
+async def make_api_call() -> APIResult:
     await asyncio.sleep(0.1)  # Simulate an HTTP request…
-    return Result(message="Hello, world!")
+    return APIResult(message="Hello, world!")
 
 
-async def main(data: Result = depends(make_api_call)) -> None:
+class Database:
+    def __init__(self, url: str) -> None:
+        self.url = url
+
+
+# Context manager-based dependables are supported too.
+@asynccontextmanager
+async def get_db() -> typing.AsyncIterator[Database]:
+    db = Database(url="sqlite://:memory:")
+    print("Connecting to database")
+    yield db
+    print("Releasing database connection")
+
+
+async def main(
+    data: APIResult = depends(make_api_call), db: Database = depends(get_db)
+) -> None:
     print("Fetched:", data)
+    print("Ready to fetch rows in:", db.url)
+    # ...
 
 
 loop = asyncio.get_event_loop()
-loop.run_until_complete(call_resolved(main))  # Fetched: Result(message='Hello, world!')
+loop.run_until_complete(call_resolved(main))
+```
+
+Output:
+
+```console
+Connecting to database
+Fetched: Result(message='Hello, world!')
+Ready to fetch rows in: sqlite://:memory:
+Releasing database connection
 ```
 
 **Tip**: aiodine does not rely on asyncio directly — it can run on curio or trio too:
