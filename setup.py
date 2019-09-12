@@ -19,6 +19,10 @@ setuptools.setup(
     long_description_content_type="text/markdown",
     packages=setuptools.find_packages(),
     python_requires=">=3.6",
+    install_requires=[
+        "async_generator; python_version<'3.7'",
+        "async_exit_stack; python_version<'3.7'",
+    ],
     url=GITHUB,
     license="MIT",
     classifiers=[
