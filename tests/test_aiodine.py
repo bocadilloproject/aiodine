@@ -1,10 +1,10 @@
-import contextlib
 import typing
 
 import pytest
 from anyio import sleep
 
 import aiodine
+from aiodine.compat import asynccontextmanager
 
 
 async def io() -> None:
@@ -81,7 +81,7 @@ def test_dependable_repr() -> None:
 async def test_context_manager_dependable() -> None:
     steps = []
 
-    @contextlib.asynccontextmanager
+    @asynccontextmanager
     async def get_connection() -> typing.AsyncGenerator[str, None]:
         await io()
         steps.append(1)

@@ -1,7 +1,8 @@
-import contextlib
 import inspect
 import types
 import typing
+
+from .compat import AsyncExitStack, asynccontextmanager, is_async_context_manager
 
 T = typing.TypeVar("T")
 DependableFunc = typing.Union[
@@ -25,12 +26,12 @@ class Dependable(typing.Generic[T]):
 async def call_resolved(
     func: DependableFunc[T],
     *args: typing.Any,
-    __exit_stack__: contextlib.AsyncExitStack = None,
+    __exit_stack__: AsyncExitStack = None,
     **kwargs: typing.Any,
 ) -> T:
     if __exit_stack__ is None:
         is_sub_dependency = False
-        exit_stack = contextlib.AsyncExitStack()
+        exit_stack = AsyncExitStack()
     else:
         is_sub_dependency = True
         exit_stack = __exit_stack__
@@ -50,7 +51,8 @@ async def call_resolved(
 
     if isinstance(raw, types.CoroutineType):
         result = await raw
-    elif isinstance(raw, contextlib.AbstractAsyncContextManager):
+    elif is_async_context_manager(raw):
+        raw = typing.cast(typing.AsyncContextManager[T], raw)
         result = await exit_stack.enter_async_context(raw)
     else:
         raise ValueError(
