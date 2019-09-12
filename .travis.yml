@@ -18,6 +18,10 @@ jobs:
       script: pytest
       after_success: codecov
 
+    - stage: test
+      python: "3.8-dev"
+      script: pytest
+
     - stage: deploy to pypi
       if: tag IS present
       script: skip
