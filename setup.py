@@ -18,6 +18,7 @@ setuptools.setup(
     long_description=long_description,
     long_description_content_type="text/markdown",
     packages=setuptools.find_packages(),
+    package_data={"aiodine": ["py.typed"]},
     python_requires=">=3.6",
     install_requires=[
         "async_generator; python_version<'3.7'",
