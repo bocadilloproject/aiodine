@@ -8,24 +8,14 @@ from .compat import (
     asyncnullcontext,
     is_async_context_manager,
 )
-
-T = typing.TypeVar("T")
-DependableFunc = typing.Union[
-    typing.Callable[..., typing.Awaitable[T]],
-    typing.Callable[..., typing.AsyncContextManager[T]],
-]
+from .models import Dependable, DependableFunc, DependablesCache, T
 
 
-def depends(func: DependableFunc[T]) -> T:
-    return typing.cast(T, Dependable(func))
+def depends(func: DependableFunc[T], *, cached: bool = None) -> T:
+    return typing.cast(T, Dependable(func, cached=cached))
 
 
-class Dependable(typing.Generic[T]):
-    def __init__(self, func: DependableFunc[T]):
-        self.func = func
-
-    def __repr__(self) -> str:
-        return f"{self.__class__.__name__}(func={self.func!r})"
+CACHE = DependablesCache()
 
 
 async def call_resolved(
@@ -46,13 +36,18 @@ async def call_resolved(
     bound = signature.bind_partial(*args, **kwargs)
     bound.apply_defaults()
 
-    for name, value in bound.arguments.items():
-        if isinstance(value, Dependable):
-            bound.arguments[name] = await call_resolved(
-                value.func, __exit_stack__=exit_stack
-            )
+    for name, val in bound.arguments.items():
+        if isinstance(val, Dependable):
+            dependable = val
 
-    raw = func(*bound.args, **bound.kwargs)
+            try:
+                value = CACHE[dependable]
+            except KeyError:
+                value = await call_resolved(dependable.func, __exit_stack__=exit_stack)
+                if CACHE.should_cache(dependable):
+                    CACHE[dependable] = value
+
+            bound.arguments[name] = value
 
     ctx = (
         exit_stack
@@ -61,6 +56,8 @@ async def call_resolved(
     )
 
     async with ctx:
+        raw = func(*bound.args, **bound.kwargs)
+
         if isinstance(raw, types.CoroutineType):
             return await raw
 

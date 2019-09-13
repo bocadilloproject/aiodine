@@ -25,6 +25,17 @@ class CowSay:
         (CowSay(), "Dependable(func=Cow says moo!)"),
     ],
 )
-def test_dependable_repr(func: typing.Callable, output: str) -> None:
-    dependable = aiodine.depends(func)
+@pytest.mark.parametrize("cached", (None, False, True))
+def test_dependable_repr(func: typing.Callable, cached: bool, output: str) -> None:
+    kwargs = {"cached": cached} if cached is not None else {}
+    dependable = aiodine.depends(func, **kwargs)
+    if cached:
+        output = f"{output.rstrip(')')}, cached)"
     assert repr(dependable) == output
+
+
+def test_dependable_equal() -> None:
+    dependable = aiodine.depends(cowsay)
+    assert dependable == dependable
+    assert dependable == aiodine.depends(cowsay)
+    assert dependable != "not a Dependable"
