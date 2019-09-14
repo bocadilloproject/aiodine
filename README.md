@@ -22,6 +22,8 @@ aiodine provides a simple but powerful [dependency injection][di] mechanism for 
 - Dependency caching (_coming soon_).
 - Great typing support.
 - Compatible with asyncio, trio and curio.
+- 100% test coverage.
+- Fully type-annotated.
 
 **Contents**
 
