@@ -13,103 +13,228 @@
 
 [`latest`]: https://github.com/bocadilloproject/aiodine/tree/latest
 
-aiodine provides a simple but powerful async-first [dependency injection][di] mechanism for Python 3.6+ programs.
+aiodine provides a simple but powerful [dependency injection][di] mechanism for Python 3.6+ asynchronous programs.
+
+**Features**
+
+- Simple and elegant API.
+- Setup/teardown logic via async context managers.
+- Dependency caching (_coming soon_).
+- Great typing support.
+- Compatible with asyncio, trio and curio.
+
+**Contents**
 
 - [Quickstart](#quickstart)
-- [Features](#features)
 - [Installation](#installation)
+- [User guide](#user-guide)
 - [FAQ](#faq)
 - [Changelog](#changelog)
 
 ## Quickstart
 
 ```python
-import asyncio
-import typing
+import aiodine
 
-from aiodine import call_resolved, depends
+async def moo() -> str:
+    print("What does the cow say?")
+    return "moo!"
 
-# On 3.7+, you can use 'from contextlib import asynccontextmanager' directly.
-from aiodine.compat import asynccontextmanager
+async def cowsay(what: str = aiodine.depends(moo)):
+    print(f"Going to say {what!r}...")
+    print(f"Cow says {what}")
 
-
-class APIResult(typing.NamedTuple):
-    message: str
-
-
-# Simple function-based dependable that returns a value.
-async def make_api_call() -> APIResult:
-    await asyncio.sleep(0.1)  # Simulate an HTTP request…
-    return APIResult(message="Hello, world!")
-
-
-class Database:
-    def __init__(self, url: str) -> None:
-        self.url = url
-
-
-# Context manager-based dependables are supported too.
-@asynccontextmanager
-async def get_db() -> typing.AsyncIterator[Database]:
-    db = Database(url="sqlite://:memory:")
-    print("Connecting to database")
-    try:
-        yield db
-    finally:
-        print("Releasing database connection")
-
-
-async def main(
-    data: APIResult = depends(make_api_call), db: Database = depends(get_db)
-) -> None:
-    print("Fetched:", data)
-    print("Ready to fetch rows in:", db.url)
-    # ...
-
-
-loop = asyncio.new_event_loop()
-loop.run_until_complete(call_resolved(main))
+import trio
+trio.run(aiodine.call_resolved, cowsay)
 ```
 
 Output:
 
 ```console
-Connecting to database
-Fetched: APIResult(message='Hello, world!')
-Ready to fetch rows in: sqlite://:memory:
-Releasing database connection
+What does the cow say?
+Going to say 'moo!'...
+Cow says moo!
 ```
 
-**Tip**: aiodine does not rely on asyncio directly — it can run on curio or trio too:
+Running with asyncio or curio instead:
 
 ```python
+import asyncio
+# Python 3.7+
+asyncio.run(aiodine.call_resolved(main))
+# Python 3.6
+loop = asyncio.get_event_loop()
+loop.run_until_complete(aiodine.call_resolved(main))
+
 import curio
-import trio
-
-curio.run(call_resolved, (main,))
-trio.run(call_resolved, main)
+curio.run(aiodine.call_resolved, (main,))
 ```
-
-## Features
-
-aiodine is:
-
-- **Editor-friendly**:
-
-In the above example, the `data: Result` annotation allows your editor to provide auto-completion.
-
-- **Type checker-friendly**:
-
-Thanks to the `-> Result` annotation on `make_api_call()`, static type checkers can enforce the consistency of types between the `data` parameter and what `make_api_call()` returns. For example, if we change `data: Result` to `data: dict`, `mypy` will be able to tell that something's wrong.
-
-- **Simple, transparent**:
-
-No complicated concepts, no funky decorators. It just works.
 
 ## Installation
 
 ```
 pip install aiodine
+```
+
+## User guide
+
+This section will be using [trio](https://github.com/python-trio/trio) as a concurrency library. Feel free to adapt the code for asyncio or curio.
+
+Let's start with some imports...
+
+```python
+import typing
+import trio
+import aiodine
+```
+
+### Core ideas
+
+The core concept in aiodine is that of a **dependable**.
+
+A dependable is created by calling `aiodine.depends(...)`:
+
+```python
+async def cowsay(what: str) -> str:
+    return f"Cow says {what}"
+
+dependable = aiodine.depends(cowsay)
+```
+
+Let's inspect what the dependable refers to:
+
+```python
+print(dependable)  # Dependable(func=<function cowsay at ...>)
+```
+
+Yup, looks good.
+
+A dependable can't do much on its own — we need to use it along with `call_resolved()`, the main entry point in aiodine.
+
+By default, `call_resolved()` acts as a proxy, i.e. it passes any positional and keyword arguments along to the given function:
+
+```python
+async def main() -> str:
+    return await aiodine.call_resolved(cowsay, what="moo")
+
+assert trio.run(main) == "Cow says moo"
+```
+
+But `call_resolved()` can also _inject_ dependencies into the function it is given. Put differently, `call_resolved()` does all the heavy lifting to provide the function with the arguments it needs.
+
+```python
+async def moo() -> str:
+    print("Evaluating 'moo()'...")
+    await trio.sleep(0.1)  # Simulate some I/O...
+    print("Ready!")
+    return "moo"
+
+async def cowsay(what: str = aiodine.depends(moo)) -> str:
+    print(f"cowsay got what={what!r}")
+    return f"Cow says {what}"
+
+async def main() -> str:
+    # Note that we're leaving out the 'what' argument here.
+    return await aiodine.call_resolved(cowsay)
+
+print(trio.run(main)
+```
+
+This code will output the following:
+
+```console
+Evaluating 'moo()'...
+Done!
+cowsay got what='moo'
+Cow says moo
+```
+
+We can still pass arguments from the outside, in which case aiodine won't need to resolve anything.
+
+For example, replace the content of `main()` with:
+
+```python
+await aiodine.call_resolved(cowsay, "MOO!!")
+```
+
+It should output the following:
+
+```console
+cowsay got what='MOO!!'
+Cow says MOO!!
+```
+
+### Typing support
+
+You may have noticed that we used type annotations in the code snippets above. If you run the snippets through a static type checker such as [mypy](http://mypy-lang.org/), you shouldn't get any errors.
+
+On the other hand, if you change the type hint of `what` to, for example, `int`, then mypy will complain because types don't match anymore:
+
+```python
+async def cowsay(what: int = aiodine.depends(moo)) -> str:
+    return f"Cow says {what}"
+```
+
+```console
+Incompatible default for argument "what" (default has type "str", argument has type "int")
+```
+
+All of this is by design: aiodine tries to be as type checker-friendly as it can. It even has a test for the above situation!
+
+### Usage with context managers
+
+Sometimes, the dependable has some setup and/or teardown logic associated with it. This is typically the case for most I/O resources such as sockets, files, or database connections.
+
+This is why `aiodine.depends()` also accepts asynchronous context managers:
+
+```python
+import typing
+import aiodine
+
+# On 3.7+, use `from contextlib import asynccontextmanager`.
+from aiodine.compat import asynccontextmanager
+
+
+class Database:
+    def __init__(self, url: str) -> None:
+    self.url = url
+
+    async def connect(self) -> None:
+        print(f"Connecting to {self.url!r}")
+
+    async def fetchall(self) -> typing.List[dict]:
+        print("Fetching data...")
+        return [{"id": 1}]
+
+    async def disconnect(self) -> None:
+        print(f"Releasing connection to {self.url!r}")
+
+
+@asynccontextmanager
+async def get_db() -> typing.AsyncIterator[Database]:
+    db = Database(url="sqlite://:memory:")
+    await db.connect()
+    try:
+        yield db
+    finally:
+        await db.disconnect()
+
+
+async def main(db: Database = aiodine.depends(get_db)) -> None:
+    rows = await db.fetchall()
+    print("Rows:", rows)
+
+
+trio.run(aiodine.call_resolved, main)
+```
+
+This code will output the following:
+
+```console
+Connecting to 'sqlite://:memory:'
+Fetching data...
+Rows: [{'id': 1}]
+Releasing connection to 'sqlite://:memory:'
 ```
 
 ## FAQ
