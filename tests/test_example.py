@@ -42,7 +42,7 @@ async def main(
 
 
 def test_example(capsys: typing.Any) -> None:
-    loop = asyncio.get_event_loop()
+    loop = asyncio.new_event_loop()
     loop.run_until_complete(call_resolved(main))
     captured = capsys.readouterr()
     assert captured.out.rstrip("\n").split("\n") == [
