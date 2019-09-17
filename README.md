@@ -128,7 +128,7 @@ But `call_resolved()` can also _inject_ dependencies into the function it is giv
 async def moo() -> str:
     print("Evaluating 'moo()'...")
     await trio.sleep(0.1)  # Simulate some I/O...
-    print("Ready!")
+    print("Done!")
     return "moo"
 
 async def cowsay(what: str = aiodine.depends(moo)) -> str:
