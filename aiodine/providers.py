@@ -123,6 +123,9 @@ class SessionProvider(Provider):
         self._generator: Optional[AsyncGenerator] = None
 
     async def enter_session(self):
+        if self._instance is not None:
+            return
+
         value = self.func()
 
         if inspect.isawaitable(value):

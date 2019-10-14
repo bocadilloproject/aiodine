@@ -37,3 +37,22 @@ async def test_session_provider_destroyed_on_exit(store: Store):
 
     # Instance was reset.
     assert await consumer() == ["resource", "other"]
+
+
+async def test_reuse_session_provider_within_session(store):
+    @store.provider(scope="session")
+    async def bar(foo):
+        return foo
+
+    @store.provider(scope="session")
+    async def foo():
+        return object()
+
+    @store.consumer
+    def consumer(foo, bar):
+        return foo, bar
+
+    store.freeze()
+    async with store.session():
+        foo, bar = await consumer()
+        assert foo is bar
