@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [v1.2.9] - 2019-10-15
+
 ### Fixed
 
 - Reuse session provider instance within session. (Pull #41)
@@ -151,7 +153,8 @@ Initial release.
 - Nested providers: providers can consume other providers.
 - Use the `aiodine` module directly or create a separate `Store`.
 
-[unreleased]: https://github.com/bocadilloproject/aiodine/compare/v1.2.8...HEAD
+[unreleased]: https://github.com/bocadilloproject/aiodine/compare/v1.2.9...HEAD
+[v1.2.9]: https://github.com/bocadilloproject/aiodine/compare/v1.2.8...v1.2.9
 [v1.2.8]: https://github.com/bocadilloproject/aiodine/compare/v1.2.7...v1.2.8
 [v1.2.7]: https://github.com/bocadilloproject/aiodine/compare/v1.2.6...v1.2.7
 [v1.2.6]: https://github.com/bocadilloproject/aiodine/compare/v1.2.5...v1.2.6
