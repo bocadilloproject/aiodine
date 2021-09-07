@@ -13,6 +13,10 @@ jobs:
       python: "3.7"
       script: pytest
 
+    - stage: test
+      python: "3.8"
+      script: pytest
+
     - stage: deploy to pypi
       if: tag IS present
       script: skip
